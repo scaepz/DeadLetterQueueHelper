@@ -5,7 +5,7 @@ VisualStudioVersion = 17.11.35219.272
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeadLetterQueueHelper", "DeadLetterQueueHelper\DeadLetterQueueHelper.csproj", "{187C3DA2-3160-423E-9803-691152A09ADF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadLetterQueueHelper.State", "DeadLetterQueueHelper.State\DeadLetterQueueHelper.State.csproj", "{29578A83-995D-416D-AE59-3543A0AF577F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeadLetterQueueHelper.State", "DeadLetterQueueHelper.State\DeadLetterQueueHelper.State.csproj", "{29578A83-995D-416D-AE59-3543A0AF577F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

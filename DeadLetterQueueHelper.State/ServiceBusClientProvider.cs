@@ -16,9 +16,9 @@ namespace DeadLetterQueueHelper.State
         }
 
         [ComputeMethod]
-        public virtual ServiceBusClient? GetServiceBusClient()
+        public async virtual Task<ServiceBusClient?> GetServiceBusClient()
         {
-            var selectedNamespace = _selectedNameSpaceState.GetSelectedNamespaceOrNull();
+            var selectedNamespace = await _selectedNameSpaceState.GetSelectedNamespaceOrNull();
 
             if (selectedNamespace == null)
             {

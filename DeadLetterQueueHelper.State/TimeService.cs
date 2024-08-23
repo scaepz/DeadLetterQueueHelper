@@ -1,8 +1,9 @@
-﻿using Stl.Fusion;
+﻿using Stl.DependencyInjection;
+using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {
-    public class TimeService : IComputeService
+    public class TimeService : IComputeService, IHasIsDisposed
     {
         private readonly TimeProvider _timeProvider;
 
@@ -10,6 +11,8 @@ namespace DeadLetterQueueHelper.State
         {
             _timeProvider = timeProvider;
         }
+
+        public bool IsDisposed => false;
 
         [ComputeMethod]
         public virtual Task<DateTimeOffset> GetTime()

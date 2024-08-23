@@ -7,14 +7,14 @@ namespace DeadLetterQueueHelper.State
         private string SelectedNamespace { get; set; } = "";
 
         [ComputeMethod]
-        public virtual string? GetSelectedNamespaceOrNull()
+        public virtual Task<string?> GetSelectedNamespaceOrNull()
         {
             if (string.IsNullOrWhiteSpace(SelectedNamespace))
             {
-                return null;
+                return Task.FromResult<string?>(null);
             }
 
-            return SelectedNamespace;
+            return Task.FromResult<string?>(SelectedNamespace);
         }
 
         public void SelectNamespace(string newNamespace)

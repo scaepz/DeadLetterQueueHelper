@@ -1,0 +1,15 @@
+﻿@inherits ComputedStateComponent<int?>
+
+<span>Dead letter count: @Count</span>
+
+@code {
+    [Inject]
+    public DeadLetterQueueService Service { get; set; } = null!;
+
+    public string Count => State.Value?.ToString() ?? "-";
+
+    protected override async Task<int?> ComputeState(CancellationToken cancellationToken)
+    {
+        return await Service.GetDeadLetterCount();
+    }
+}

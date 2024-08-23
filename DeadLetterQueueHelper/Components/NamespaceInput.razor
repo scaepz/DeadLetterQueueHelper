@@ -1,0 +1,16 @@
+﻿<div>
+    <label for="nameSpaceInput">Fully qualified namespace</label>
+    <input name="nameSpaceInput" @bind="InputText" />
+    <button>Connect</button>
+</div>
+@code {
+    [Inject]
+    public SelectedNameSpaceState GlobalState { get; set; } = null!;
+
+    string InputText { get; set; }
+
+    void SelectNamespace()
+    {
+        GlobalState.SelectNamespace(InputText);
+    }
+}

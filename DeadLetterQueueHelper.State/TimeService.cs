@@ -1,8 +1,15 @@
-﻿using Stl.Fusion;
+﻿using Stl.CommandR.Configuration;
+using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {
-    public class TimeService : IComputeService
+    public interface ITimeService : IComputeService
+    {
+        [ComputeMethod]
+        Task<DateTimeOffset> GetTime();
+    }
+
+    public class TimeService : ITimeService
     {
         private readonly TimeProvider _timeProvider;
 
@@ -12,7 +19,7 @@ namespace DeadLetterQueueHelper.State
         }
 
         [ComputeMethod]
-        public Task<DateTimeOffset> GetTime()
+        public virtual Task<DateTimeOffset> GetTime()
         {
             return Task.FromResult(_timeProvider.GetLocalNow());
         }

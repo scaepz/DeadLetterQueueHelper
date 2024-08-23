@@ -3,18 +3,20 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using DeadLetterQueueHelper;
 using Stl.Fusion;
 using DeadLetterQueueHelper.State;
+using Stl.Fusion.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 
-builder.Services.AddFusion(Stl.Rpc.RpcServiceMode.None);
+var fusion = builder.Services.AddFusion(Stl.Rpc.RpcServiceMode.None);
+fusion.AddBlazor();
+fusion.AddService<ITimeService, TimeService>();
 
 builder.Services
     .AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) })
-    .AddSingleton(TimeProvider.System)
-    .AddSingleton<TimeService>();
+    .AddSingleton(TimeProvider.System);
 
 builder.Services.AddMsalAuthentication(options =>
 {

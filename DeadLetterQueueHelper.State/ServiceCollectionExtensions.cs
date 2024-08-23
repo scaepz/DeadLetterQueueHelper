@@ -1,5 +1,4 @@
-﻿using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Azure;
+﻿using DeadLetterQueueHelper.State.AccessTokens;
 using Microsoft.Extensions.DependencyInjection;
 using Stl.Fusion;
 
@@ -11,6 +10,10 @@ namespace DeadLetterQueueHelper.State
         {
             var fusion = services.AddFusion();
             fusion.AddService<TimeService>();
+            fusion.AddService<SelectedNameSpaceState>();
+            fusion.AddService<ServiceBusClientProvider>();
+            
+            services.AddSingleton<AccessTokenCredential>();
 
             services.AddSingleton(TimeProvider.System);
 

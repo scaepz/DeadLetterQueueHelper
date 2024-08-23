@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using DeadLetterQueueHelper.State.AccessTokens;
 using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
@@ -6,12 +7,12 @@ namespace DeadLetterQueueHelper.State
     public class ServiceBusClientProvider : IComputeService
     {
         private readonly SelectedNameSpaceState _selectedNameSpaceState;
-        private readonly AccessTokenService _accessTokenService;
+        private readonly AccessTokenCredential _accessTokenCredential;
 
-        public ServiceBusClientProvider(SelectedNameSpaceState selectedNameSpaceState, AccessTokenService accessTokenService)
+        public ServiceBusClientProvider(SelectedNameSpaceState selectedNameSpaceState, AccessTokenCredential accessTokenCredential)
         {
             _selectedNameSpaceState = selectedNameSpaceState;
-            _accessTokenService = accessTokenService;
+            _accessTokenCredential = accessTokenCredential;
         }
 
         [ComputeMethod]
@@ -24,13 +25,7 @@ namespace DeadLetterQueueHelper.State
                 return null;
             }
 
-            var accessToken = _accessTokenService.GetAccessToken();
-            if (accessToken == null)
-            {
-                return null;
-            }
-
-            return null;
+            return new ServiceBusClient(selectedNamespace, _accessTokenCredential);
         }
     }
 }

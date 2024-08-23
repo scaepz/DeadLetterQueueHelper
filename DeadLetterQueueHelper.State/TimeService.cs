@@ -1,5 +1,4 @@
-﻿using Stl.CommandR.Configuration;
-using Stl.Fusion;
+﻿using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {

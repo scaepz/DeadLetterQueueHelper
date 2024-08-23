@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.1" />
+    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="8.0.8" />
     <PackageReference Include="Stl.Fusion" Version="6.8.11" />
     <PackageReference Include="Stl.Generators" Version="6.8.11" />
   </ItemGroup>

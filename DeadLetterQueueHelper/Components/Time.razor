@@ -1,0 +1,21 @@
+﻿@inherits ComputedStateComponent<DateTimeOffset>
+
+<span>@TimeText</span>
+<button @onclick="Refresh">Refresh</button>
+
+@code {
+    [Inject]
+    public TimeService TimeService { get; set; } = null!;
+
+    private string TimeText => State.Value.ToString();
+
+    protected override Task<DateTimeOffset> ComputeState(CancellationToken cancellationToken)
+    {
+        return TimeService.GetTime();
+    }
+
+    private void Refresh()
+    {
+        TimeService.Refresh();
+    }
+}

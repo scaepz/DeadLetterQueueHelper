@@ -3,13 +3,7 @@ using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {
-    public interface ITimeService : IComputeService
-    {
-        [ComputeMethod]
-        Task<DateTimeOffset> GetTime();
-    }
-
-    public class TimeService : ITimeService
+    public class TimeService : IComputeService
     {
         private readonly TimeProvider _timeProvider;
 

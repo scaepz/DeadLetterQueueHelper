@@ -5,7 +5,7 @@
 
 @code {
     [Inject]
-    public ITimeService TimeService { get; set; } = null!;
+    public TimeService TimeService { get; set; } = null!;
 
     private string TimeText => State.Value.ToString();
 
@@ -16,6 +16,6 @@
 
     private void Refresh()
     {
-        ((TimeService)TimeService).Refresh();
+        TimeService.Refresh();
     }
 }

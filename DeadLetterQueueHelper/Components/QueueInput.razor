@@ -1,7 +1,7 @@
 ﻿<div>
     <label for="queueInput">Fully qualified namespace</label>
     <input name="queueInput" @bind="InputText" />
-    <button>Use queue</button>
+    <button @onclick="SelectQueue">Use queue</button>
 </div>
 @code {
     [Inject]
@@ -9,7 +9,7 @@
 
     string InputText { get; set; }
 
-    void SelectNamespace()
+    void SelectQueue()
     {
         GlobalState.SelectQueue(InputText);
     }

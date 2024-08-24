@@ -1,9 +1,12 @@
-﻿using Stl.Fusion;
+﻿using Stl.DependencyInjection;
+using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {
-    public class SelectedNameSpaceState : IComputeService
+    public class SelectedNameSpaceState : IComputeService, IHasIsDisposed
     {
+        public bool IsDisposed => false;
+
         private string SelectedNamespace { get; set; } = "";
 
         [ComputeMethod]

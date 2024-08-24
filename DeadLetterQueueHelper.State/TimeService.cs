@@ -5,6 +5,8 @@ namespace DeadLetterQueueHelper.State
 {
     public class TimeService : IComputeService, IHasIsDisposed
     {
+        public bool IsDisposed => false;
+
         private readonly TimeProvider _timeProvider;
 
         public TimeService(TimeProvider timeProvider)
@@ -12,7 +14,6 @@ namespace DeadLetterQueueHelper.State
             _timeProvider = timeProvider;
         }
 
-        public bool IsDisposed => false;
 
         [ComputeMethod]
         public virtual Task<DateTimeOffset> GetTime()

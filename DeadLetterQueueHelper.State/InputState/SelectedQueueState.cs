@@ -1,9 +1,12 @@
-﻿using Stl.Fusion;
+﻿using Stl.DependencyInjection;
+using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
 {
-    public class SelectedQueueState : IComputeService
+    public class SelectedQueueState : IComputeService, IHasIsDisposed
     {
+        public bool IsDisposed => false;
+
         private string SelectedQueue { get; set; } = "";
 
         [ComputeMethod]
@@ -19,6 +22,7 @@ namespace DeadLetterQueueHelper.State
 
         public void SelectQueue(string queue)
         {
+            Console.WriteLine("Select queue");
             SelectedQueue = queue;
             using (Computed.Invalidate())
             {

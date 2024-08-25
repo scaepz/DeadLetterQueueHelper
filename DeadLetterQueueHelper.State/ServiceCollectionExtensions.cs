@@ -1,7 +1,7 @@
-﻿using DeadLetterQueueHelper.State.AccessTokens;
-using DeadLetterQueueHelper.State.DeadLetterQueueServices;
+﻿using DeadLetterQueueHelper.State.AppStateLayer;
+using DeadLetterQueueHelper.State.IntegrationMessageLayer;
+using DeadLetterQueueHelper.State.ServiceBusLayer;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State
@@ -16,6 +16,7 @@ namespace DeadLetterQueueHelper.State
             fusion.AddService<SelectedQueueState>(ServiceLifetime.Scoped);
             fusion.AddService<ServiceBusClientProvider>(ServiceLifetime.Scoped);
             fusion.AddService<DeadLetterQueueService>(ServiceLifetime.Scoped);
+            fusion.AddService<IntegrationMessageService>(ServiceLifetime.Scoped);
 
             services.AddScoped<AccessTokenCredential>();
 

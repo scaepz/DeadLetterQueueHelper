@@ -1,7 +1,7 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
-namespace DeadLetterQueueHelper.State.AccessTokens
+namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
     public class AccessTokenCredential : TokenCredential
     {

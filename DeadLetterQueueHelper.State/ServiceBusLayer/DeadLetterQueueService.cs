@@ -1,8 +1,9 @@
 ﻿using Azure.Messaging.ServiceBus;
+using DeadLetterQueueHelper.State.AppStateLayer;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
-namespace DeadLetterQueueHelper.State.DeadLetterQueueServices
+namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
     public class DeadLetterQueueService : IComputeService, IHasIsDisposed
     {
@@ -17,21 +18,27 @@ namespace DeadLetterQueueHelper.State.DeadLetterQueueServices
             _selectedQueueState = selectedQueueState;
         }
 
-
         [ComputeMethod]
-        public async virtual Task<int?> GetDeadLetterCount()
+        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters()
         {
-            Console.WriteLine("GetDeadLetterCount");
+            Console.WriteLine("PeekAllDeadLetters");
             var receiver = await GetReceiver();
 
             if (receiver == null)
             {
                 Console.WriteLine("Receiver was null");
-                return null;
+                return new List<ServiceBusReceivedMessage>();
             }
 
+            return await receiver.PeekMessagesAsync(1000);
+        }
 
-            var messages = await receiver.PeekMessagesAsync(1000);
+        [ComputeMethod]
+        public async virtual Task<int?> GetDeadLetterCount()
+        {
+            Console.WriteLine("GetDeadLetterCount");
+
+            var messages = await PeekAllDeadLetters();
 
             return messages.Count;
         }

@@ -1,7 +1,7 @@
 ﻿using Stl.DependencyInjection;
 using Stl.Fusion;
 
-namespace DeadLetterQueueHelper.State
+namespace DeadLetterQueueHelper.State.AppStateLayer
 {
     public class SelectedQueueState : IComputeService, IHasIsDisposed
     {

@@ -1,12 +1,12 @@
 ﻿using Azure.Messaging.ServiceBus;
-using DeadLetterQueueHelper.State.AccessTokens;
+using DeadLetterQueueHelper.State.AppStateLayer;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
-namespace DeadLetterQueueHelper.State
+namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
     public class ServiceBusClientProvider : IComputeService, IHasIsDisposed
-    { 
+    {
         public bool IsDisposed => false;
         private readonly SelectedNameSpaceState _selectedNameSpaceState;
         private readonly AccessTokenCredential _accessTokenCredential;
@@ -28,7 +28,7 @@ namespace DeadLetterQueueHelper.State
                 return null;
             }
 
-            return new ServiceBusClient(selectedNamespace, _accessTokenCredential, new ServiceBusClientOptions { TransportType = ServiceBusTransportType.AmqpWebSockets});
+            return new ServiceBusClient(selectedNamespace, _accessTokenCredential, new ServiceBusClientOptions { TransportType = ServiceBusTransportType.AmqpWebSockets });
         }
     }
 }

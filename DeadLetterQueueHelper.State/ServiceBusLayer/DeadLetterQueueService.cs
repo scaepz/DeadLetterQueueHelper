@@ -11,7 +11,7 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
         private readonly ServiceBusClientProvider _clientProvider;
         private readonly SelectedQueueState _selectedQueueState;
-de        private readonly QueueMonitor _queueMonitor;
+        private readonly QueueMonitor _queueMonitor;
 
         public DeadLetterQueueService(ServiceBusClientProvider clientProvider, SelectedQueueState selectedQueueState, QueueMonitor queueMonitor)
         {

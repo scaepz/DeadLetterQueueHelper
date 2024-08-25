@@ -1,4 +1,6 @@
-﻿using DeadLetterQueueHelper.State.ServiceBusLayer;
+﻿using Azure.Messaging.ServiceBus;
+using DeadLetterQueueHelper.State.ServiceBusLayer;
+using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
@@ -24,13 +26,14 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
                 .GroupBy(x => x.MessageId)
                 .Select(groupedDeadLetters =>
                 {
-                    var attempts = groupedDeadLetters
-                        .Select(deadLetter => new IntegrationMessageAttempt(deadLetter.SequenceNumber, deadLetter.Body.ToString()))
-                        .ToList();
-
-                    return new IntegrationMessage(groupedDeadLetters.Key, attempts);
+                    return new IntegrationMessage(groupedDeadLetters.ToList());
                 })
                 .ToList();
+        }
+
+        public async virtual Task Resubmit(ServiceBusReceivedMessage message)
+        {
+            await _deadLetterQueueService.Resubmit(message);
         }
     }
 }

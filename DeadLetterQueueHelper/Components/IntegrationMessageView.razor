@@ -1,0 +1,23 @@
+﻿<div class="message">
+    <div class="id">Id: @Message.Id</div>
+    <div>Subject: @Message.Subject</div>
+    <div>First enqueued: @Message.FirstEnqueuedTime</div>
+    <div>Attempts: @Message.Attempts.Count</div> 
+    <div>Dead letter reason: @Message.DeadLetterReason</div>
+    <div>Body:</div>
+    <pre>@Message.Body</pre>
+    <button @onclick="Resubmit">Resubmit</button>
+</div>
+
+@code {
+    [Parameter]
+    public IntegrationMessage Message { get; set; } = null!;
+
+    [Inject]
+    IntegrationMessageService Service { get; set; } = null!;
+
+    async Task Resubmit()
+    {
+        await Service.Resubmit(Message.Attempts.First());
+    }
+}

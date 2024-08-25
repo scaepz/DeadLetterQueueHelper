@@ -1,10 +1,26 @@
 ﻿@inherits ComputedStateComponent<IReadOnlyList<IntegrationMessage>>;
 
-<h3>IntegrationMessageListView</h3>
+<h3>Failed messages</h3>
+
+@if (State.HasValue)
+{
+    @foreach (var message in State.Value)
+    {
+        <IntegrationMessageView Message="message" />
+    }
+}
+else
+{
+    <div>Loading...</div>
+}
+
 
 @code {
-    protected override Task<IReadOnlyList<IntegrationMessage>> ComputeState(CancellationToken cancellationToken)
+    [Inject]
+    public IntegrationMessageService IntegrationMessageService { get; set; } = null!;
+
+    protected override async Task<IReadOnlyList<IntegrationMessage>> ComputeState(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return await IntegrationMessageService.GetFailedMessages();
     }
 }

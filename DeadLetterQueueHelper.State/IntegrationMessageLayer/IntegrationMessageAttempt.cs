@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 {
-    public record IntegrationMessageAttempt(long SequenceNumber, string body)
+    public record IntegrationMessageAttempt(string MessageId, long SequenceNumber, string Body)
     {
     }
 }

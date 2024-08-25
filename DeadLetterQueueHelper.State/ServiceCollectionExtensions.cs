@@ -20,6 +20,7 @@ namespace DeadLetterQueueHelper.State
 
             services.AddScoped<AccessTokenCredential>();
 
+            services.AddScoped<QueueMonitor>();
             services.AddSingleton(TimeProvider.System);
 
             return services;

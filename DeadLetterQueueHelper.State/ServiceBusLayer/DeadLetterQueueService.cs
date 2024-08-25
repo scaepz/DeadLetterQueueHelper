@@ -11,18 +11,20 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
         private readonly ServiceBusClientProvider _clientProvider;
         private readonly SelectedQueueState _selectedQueueState;
+de        private readonly QueueMonitor _queueMonitor;
 
-        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, SelectedQueueState selectedQueueState)
+        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, SelectedQueueState selectedQueueState, QueueMonitor queueMonitor)
         {
             _clientProvider = clientProvider;
             _selectedQueueState = selectedQueueState;
+            _queueMonitor = queueMonitor;
         }
 
         [ComputeMethod(AutoInvalidationDelay = 15)]
         public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters()
         {
             Console.WriteLine("PeekAllDeadLetters");
-            var receiver = await GetReceiver();
+            var receiver = await _clientProvider.GetReceiver(SubQueue.DeadLetter);
 
             if (receiver == null)
             {
@@ -43,74 +45,80 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             return messages.Count;
         }
 
-        [ComputeMethod]
-        protected async virtual Task<ServiceBusReceiver?> GetReceiver()
+
+        public async Task Resubmit(ServiceBusReceivedMessage originalMessage)
         {
-            Console.WriteLine("GetReceiver");
-
-            var client = await _clientProvider.GetServiceBusClient();
-
-            if (client == null)
-            {
-                Console.WriteLine("Client was null");
-                return null;
-            }
-
-            var queue = await _selectedQueueState.GetSelectedQueue();
-            if (queue == null)
-            {
-                Console.WriteLine("Queue was null");
-
-                return null;
-            }
-
-            return client.CreateReceiver(queue, new ServiceBusReceiverOptions
-            {
-                SubQueue = SubQueue.DeadLetter,
-                ReceiveMode = ServiceBusReceiveMode.PeekLock,
-            });
-        }
-
-        public async Task Resubmit(ServiceBusReceivedMessage message)
-        {
-            var sender = await GetSender();
+            var sender = await _clientProvider.GetSender();
             if (sender == null)
             {
                 throw new InvalidOperationException("Could not get a service bus sender");
             }
 
-            var messageToSend = new ServiceBusMessage(message);
+            var messageToSend = new ServiceBusMessage(originalMessage);
+
+            var deadLetters = await PeekAllDeadLetters();
+            var lastSequenceNumber = deadLetters
+                .Where(x => x.MessageId == originalMessage.MessageId)
+                .Select(x => x.SequenceNumber)
+                .Max();
 
             await sender.SendMessageAsync(messageToSend);
+
+            _queueMonitor.CallbackWhenMessageDisappeared(new MonitorEntry
+            (
+                messageToSend.MessageId,
+                lastSequenceNumber,
+                HandleResubmissionDisappearedFromQueue)
+            );
+
             using (Computed.Invalidate())
             {
                 _ = PeekAllDeadLetters();
             }
         }
 
-
-        [ComputeMethod]
-        protected async virtual Task<ServiceBusSender?> GetSender()
+        private async Task HandleResubmissionDisappearedFromQueue(MonitorEntry disappearedMessage)
         {
-            Console.WriteLine("GetSender");
-
-            var client = await _clientProvider.GetServiceBusClient();
-
-            if (client == null)
+            Console.WriteLine("HandleResubmissionDisappearedFromQueue");
+            using (Computed.Invalidate())
             {
-                Console.WriteLine("Client was null");
-                return null;
+                _ = PeekAllDeadLetters();
             }
 
-            var queue = await _selectedQueueState.GetSelectedQueue();
-            if (queue == null)
-            {
-                Console.WriteLine("Queue was null");
+            var deadLetters = await PeekAllDeadLetters();
+            var newlyDeadLettered = deadLetters.FirstOrDefault(x => x.SequenceNumber > disappearedMessage.PreviousSequenceNumber && x.MessageId == disappearedMessage.MessageId);
 
-                return null;
+            Console.WriteLine("newlyDeadLettered" + newlyDeadLettered);
+
+            if (newlyDeadLettered != null)
+                return;
+
+            var deadLetterQueue = await _clientProvider.GetReceiver(SubQueue.DeadLetter);
+            if (deadLetterQueue == null)
+            {
+                throw new InvalidOperationException($"Couldn't get a DLQ receiver at a crucial moment. The resubmitted message with id {disappearedMessage.MessageId} succeeded, but we couldn't clean it up from the DLQ.");
             }
 
-            return client.CreateSender(queue);
+            var messages = await deadLetterQueue.ReceiveMessagesAsync(1000);
+
+            foreach (var message in messages)
+            {
+                Console.WriteLine("message: " + message);
+                if (message.MessageId == disappearedMessage.MessageId)
+                {
+
+                    await deadLetterQueue.CompleteMessageAsync(message);
+                }
+                else
+                {
+                    await deadLetterQueue.AbandonMessageAsync(message);
+                }
+            }
+
+            using (Computed.Invalidate())
+            {
+                _ = PeekAllDeadLetters();
+            }
         }
     }
 }

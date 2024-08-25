@@ -34,6 +34,8 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             if (_messagesToMonitor.Count == 0)
                 return;
 
+            // TODO what if the user switches queue?
+            // Can we support multiple active queues?
             var client = await _clientProvider.GetReceiver(SubQueue.None);
 
             if (client == null)

@@ -20,7 +20,7 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             _queueMonitor = queueMonitor;
         }
 
-        [ComputeMethod(AutoInvalidationDelay = 60)]
+        [ComputeMethod(AutoInvalidationDelay = 30)]
         public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters()
         {
             Console.WriteLine("PeekAllDeadLetters");

@@ -1,9 +1,28 @@
 ﻿.message {
     border: 1px solid lightgray;
     border-radius: 8px;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background: lightblue;
     padding: 16px;
 }
 
-.id {
+.attempts {
+    display: flex;
+    align-self: stretch;
+    align-items: center;
+    justify-content: space-between;
+}
 
+.hidden {
+    visibility: hidden;
+}
+
+.id {
+    font-size: 18px;
+    font-weight: bold;
 }

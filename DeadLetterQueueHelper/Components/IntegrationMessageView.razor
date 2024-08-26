@@ -1,23 +1,71 @@
-﻿<div class="message">
-    <div class="id">Id: @Message.Id</div>
-    <div>Subject: @Message.Subject</div>
-    <div>First enqueued: @Message.FirstEnqueuedTime</div>
-    <div>Attempts: @Message.Attempts.Count</div> 
-    <div>Dead letter reason: @Message.DeadLetterReason</div>
-    <div>Body:</div>
-    <pre>@Message.Body</pre>
-    <button @onclick="Resubmit">Resubmit</button>
+﻿@using Azure.Messaging.ServiceBus
+<div class="message">
+    <header class="message-header">
+        <div class="id">@Message.Id</div>
+        <div>Subject: @Message.Subject</div>
+        <div>First enqueued: @Message.FirstEnqueuedTime</div>
+        <section class="attempts">
+            <button class="@(HasEarlierAttempt ? "" : "hidden")" @onclick=PreviousAttempt>Previous</button>
+            Attempt #@_attemptIndex
+            <button class="@(HasLaterAttempt ? "" : "hidden")" @onclick=NextAttempt>Next</button>
+        </section>
+    </header>
+    <section>
+        <div>Dead letter reason: @SelectedAttempt?.DeadLetterReason</div>
+        <div>Body:</div>
+        <pre>@SelectedAttempt?.Body</pre>
+        <button @onclick="Resubmit">Resubmit</button>
+    </section>
 </div>
 
 @code {
+    private int _attemptIndex = 0;
+
     [Parameter]
     public IntegrationMessage Message { get; set; } = null!;
 
     [Inject]
     IntegrationMessageService Service { get; set; } = null!;
 
+    private bool HasEarlierAttempt => _attemptIndex > 0;
+
+    private bool HasLaterAttempt => _attemptIndex < Message.Attempts.Count - 1;
+
+    private ServiceBusReceivedMessage? SelectedAttempt => Message.Attempts.ElementAtOrDefault(_attemptIndex);
+
+    protected override void OnParametersSet()
+    {
+        SetAttemptIndex(Message.Attempts.Count - 1);
+    }
+
     async Task Resubmit()
     {
-        await Service.Resubmit(Message.Attempts.First());
+        if (SelectedAttempt == null)
+        {
+            return;
+        }
+        await Service.Resubmit(SelectedAttempt);
     }
+
+    private void SetAttemptIndex(int newIndex)
+    {
+        if (newIndex < 0 || newIndex >= Message.Attempts.Count)
+        {
+            return;
+        }
+
+        _attemptIndex = newIndex;
+        StateHasChanged();
+    }
+
+    private void NextAttempt()
+    {
+        SetAttemptIndex(_attemptIndex + 1);
+    }
+
+    private void PreviousAttempt()
+    {
+        SetAttemptIndex(_attemptIndex - 1);
+    }
+
 }

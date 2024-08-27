@@ -18,4 +18,10 @@
     <ProjectReference Include="..\DeadLetterQueueHelper.State\DeadLetterQueueHelper.State.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\.well-known\microsoft-identity-association.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

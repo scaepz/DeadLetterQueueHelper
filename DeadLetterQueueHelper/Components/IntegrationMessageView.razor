@@ -22,7 +22,7 @@
         @Message.Attempts.Count attempts
     </td>
     <td>
-        <button>Resubmit</button>
+        <ResubmitButton Message=Message></ResubmitButton>
     </td>
 </tr>
 @if (IsExpanded)
@@ -67,18 +67,8 @@
 
     private ServiceBusReceivedMessage? SelectedAttempt => Message.Attempts.ElementAtOrDefault(_attemptIndex);
 
-    async Task Resubmit()
-    {
-        if (SelectedAttempt == null)
-        {
-            return;
-        }
-        await Service.Resubmit(SelectedAttempt);
-    }
-
     void ToggleExpand()
     {
         IsExpanded = !IsExpanded;
     }
-
 }

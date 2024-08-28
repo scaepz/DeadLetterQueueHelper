@@ -35,6 +35,15 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             return await receiver.PeekMessagesAsync(1000, fromSequenceNumber: 0);
         }
 
+        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> ForcePeekAllDeadLetters()
+        {
+            using (Computed.Invalidate())
+            {
+                _ = PeekAllDeadLetters();
+            }
+            return await PeekAllDeadLetters();
+        }
+
         [ComputeMethod]
         public async virtual Task<int?> GetDeadLetterCount()
         {
@@ -45,58 +54,12 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             return messages.Count;
         }
 
-
-        public async Task Resubmit(ServiceBusReceivedMessage originalMessage)
+        public async Task DeleteDeadLetters(string messageId)
         {
-            var sender = await _clientProvider.GetSender();
-            if (sender == null)
-            {
-                throw new InvalidOperationException("Could not get a service bus sender");
-            }
-
-            var messageToSend = new ServiceBusMessage(originalMessage);
-
-            var deadLetters = await PeekAllDeadLetters();
-            var lastSequenceNumber = deadLetters
-                .Where(x => x.MessageId == originalMessage.MessageId)
-                .Select(x => x.SequenceNumber)
-                .Max();
-
-            await sender.SendMessageAsync(messageToSend);
-
-            _queueMonitor.CallbackWhenMessageDisappeared(new MonitorEntry
-            (
-                messageToSend.MessageId,
-                lastSequenceNumber,
-                HandleResubmissionDisappearedFromQueue)
-            );
-
-            using (Computed.Invalidate())
-            {
-                _ = PeekAllDeadLetters();
-            }
-        }
-
-        private async Task HandleResubmissionDisappearedFromQueue(MonitorEntry disappearedMessage)
-        {
-            Console.WriteLine("HandleResubmissionDisappearedFromQueue");
-            using (Computed.Invalidate())
-            {
-                _ = PeekAllDeadLetters();
-            }
-
-            var deadLetters = await PeekAllDeadLetters();
-            var newlyDeadLettered = deadLetters.FirstOrDefault(x => x.SequenceNumber > disappearedMessage.PreviousSequenceNumber && x.MessageId == disappearedMessage.MessageId);
-
-            Console.WriteLine("newlyDeadLettered" + newlyDeadLettered);
-
-            if (newlyDeadLettered != null)
-                return;
-
             var deadLetterQueue = await _clientProvider.GetReceiver(SubQueue.DeadLetter);
             if (deadLetterQueue == null)
             {
-                throw new InvalidOperationException($"Couldn't get a DLQ receiver at a crucial moment. The resubmitted message with id {disappearedMessage.MessageId} succeeded, but we couldn't clean it up from the DLQ.");
+                throw new InvalidOperationException($"Couldn't get a DLQ receiver when I tried to delete {messageId}.");
             }
 
             var messages = await deadLetterQueue.ReceiveMessagesAsync(1000);
@@ -104,7 +67,7 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             foreach (var message in messages)
             {
                 Console.WriteLine("message: " + message);
-                if (message.MessageId == disappearedMessage.MessageId)
+                if (message.MessageId == messageId)
                 {
 
                     await deadLetterQueue.CompleteMessageAsync(message);
@@ -119,6 +82,20 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             {
                 _ = PeekAllDeadLetters();
             }
+        }
+
+
+        public async Task Send(ServiceBusReceivedMessage originalMessage)
+        {
+            var sender = await _clientProvider.GetSender();
+            if (sender == null)
+            {
+                throw new InvalidOperationException("Could not get a service bus sender");
+            }
+
+            var messageToSend = new ServiceBusMessage(originalMessage);
+
+            await sender.SendMessageAsync(messageToSend);
         }
     }
 }

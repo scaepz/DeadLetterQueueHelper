@@ -1,0 +1,34 @@
+﻿@inherits ComputedStateComponent<bool>
+
+@if (!State.HasValue)
+{
+    <div></div>
+}
+else if (HasPendingResubmission)
+{
+    <div>Pending...</div>
+}
+else
+{
+    <button @onclick=Resubmit>Resubmit</button>
+}
+
+@code {
+    [Parameter]
+    public IntegrationMessage Message { get; set; } = null!;
+
+    [Inject]
+    public IntegrationMessageService Service { get; set; } = null!;
+
+    private bool HasPendingResubmission => State.Value;
+
+    protected override async Task<bool> ComputeState(CancellationToken cancellationToken)
+    {
+        return await Service.HasPendingResubmission(Message.Id);
+    }
+
+    private async Task Resubmit()
+    {
+        await Service.Resubmit(Message);
+    }
+}

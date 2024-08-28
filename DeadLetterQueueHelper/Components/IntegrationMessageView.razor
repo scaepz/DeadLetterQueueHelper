@@ -33,8 +33,8 @@
             Body
         </th>
         <th>Dead letter reason</th>
-        <th>Enqueued</th>
         <th>Sequence number</th>
+        <th>Enqueued</th>
     </tr>
     @foreach (var attempt in Message.Attempts)
     {
@@ -44,8 +44,8 @@
                 <pre>@attempt.Body</pre>
             </td>
             <td>@attempt.DeadLetterReason</td>
-            <td>@attempt.EnqueuedTime</td>
             <td>@attempt.SequenceNumber</td>
+            <td>@attempt.EnqueuedTime</td>
         </tr>
     }
 }

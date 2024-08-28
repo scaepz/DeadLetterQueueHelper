@@ -44,16 +44,6 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             return await PeekAllDeadLetters();
         }
 
-        [ComputeMethod]
-        public async virtual Task<int?> GetDeadLetterCount()
-        {
-            Console.WriteLine("GetDeadLetterCount");
-
-            var messages = await PeekAllDeadLetters();
-
-            return messages.Count;
-        }
-
         public async Task DeleteDeadLetters(string messageId)
         {
             var deadLetterQueue = await _clientProvider.GetReceiver(SubQueue.DeadLetter);

@@ -14,7 +14,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var fusion = builder.Services.AddFusion(Stl.Rpc.RpcServiceMode.None);
 fusion.AddBlazor();
-fusion.AddService<TimeService>();
 
 fusion.AddComputedGraphPruner(_ => new() { CheckPeriod = TimeSpan.FromSeconds(30) });
 fusion.AddFusionTime();

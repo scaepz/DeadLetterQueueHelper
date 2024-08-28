@@ -1,24 +1,58 @@
 ﻿@using Azure.Messaging.ServiceBus
-<div class="message">
-    <header class="message-header">
-        <div class="id">@Message.Id</div>
-        <div>Subject: @Message.Subject</div>
-        <div>First enqueued: @Message.FirstEnqueuedTime</div>
-        <section class="attempts">
-            <button class="@(HasEarlierAttempt ? "" : "hidden")" @onclick=PreviousAttempt>Previous</button>
-            Attempt #@_attemptIndex
-            <button class="@(HasLaterAttempt ? "" : "hidden")" @onclick=NextAttempt>Next</button>
-        </section>
-    </header>
-    <section>
-        <div>Dead letter reason: @SelectedAttempt?.DeadLetterReason</div>
-        <div>Body:</div>
-        <pre>@SelectedAttempt?.Body</pre>
-        <button @onclick="Resubmit">Resubmit</button>
-    </section>
-</div>
+@using System.Text
+@using System.Security.Cryptography
+
+<tr class="message">
+    <td class="expansion-cell">
+        <button @onclick=ToggleExpand>Expand</button>
+    </td>
+    <td>
+        @Message.Subject
+    </td>
+    <td class="Id">
+        <div>@Message.Id</div>
+    </td>
+    <td>
+        @Message.FirstEnqueuedTime
+    </td>
+    <td>
+        @Message.DeadLetterReason
+    </td>
+    <td>
+        @Message.Attempts.Count attempts
+    </td>
+    <td>
+        <button>Resubmit</button>
+    </td>
+</tr>
+@if (IsExpanded)
+{
+    <tr>
+        <th class="visually-hidden"></th>
+        <th colspan="3">
+            Body
+        </th>
+        <th>Dead letter reason</th>
+        <th>Enqueued</th>
+        <th>Sequence number</th>
+    </tr>
+    @foreach (var attempt in Message.Attempts)
+    {
+        <tr>
+            <td class="visually-hidden"></td>
+            <td colspan="3">
+                <pre>@attempt.Body</pre>
+            </td>
+            <td>@attempt.DeadLetterReason</td>
+            <td>@attempt.EnqueuedTime</td>
+            <td>@attempt.SequenceNumber</td>
+        </tr>
+    }
+}
 
 @code {
+    private bool IsExpanded = false;
+
     private int _attemptIndex = 0;
 
     [Parameter]
@@ -33,11 +67,6 @@
 
     private ServiceBusReceivedMessage? SelectedAttempt => Message.Attempts.ElementAtOrDefault(_attemptIndex);
 
-    protected override void OnParametersSet()
-    {
-        SetAttemptIndex(Message.Attempts.Count - 1);
-    }
-
     async Task Resubmit()
     {
         if (SelectedAttempt == null)
@@ -47,25 +76,9 @@
         await Service.Resubmit(SelectedAttempt);
     }
 
-    private void SetAttemptIndex(int newIndex)
+    void ToggleExpand()
     {
-        if (newIndex < 0 || newIndex >= Message.Attempts.Count)
-        {
-            return;
-        }
-
-        _attemptIndex = newIndex;
-        StateHasChanged();
-    }
-
-    private void NextAttempt()
-    {
-        SetAttemptIndex(_attemptIndex + 1);
-    }
-
-    private void PreviousAttempt()
-    {
-        SetAttemptIndex(_attemptIndex - 1);
+        IsExpanded = !IsExpanded;
     }
 
 }

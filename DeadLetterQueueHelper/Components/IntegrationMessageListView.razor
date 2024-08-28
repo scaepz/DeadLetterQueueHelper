@@ -1,13 +1,26 @@
 ﻿@inherits ComputedStateComponent<IReadOnlyList<IntegrationMessage>>;
 
-<h3>Failed messages</h3>
-
 @if (State.HasValue)
 {
-    @foreach (var message in State.Value)
-    {
-        <IntegrationMessageView Message="message" />
-    }
+    <table>
+        <thead>
+            <tr>
+                <th>Expand</th>
+                <th>Subject</th>
+                <th>Id</th>
+                <th>First enqueued</th>
+                <th>Dead letter reason</th>
+                <th>Attempts</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in State.Value)
+            {
+                <IntegrationMessageView Message="message" />
+            }
+        </tbody>
+    </table>
 }
 else
 {

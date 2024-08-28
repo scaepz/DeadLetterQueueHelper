@@ -1,0 +1,9 @@
+﻿table {
+    border-collapse: collapse;
+}
+
+th {
+    background: lightblue;
+    padding-left: 16px;
+    padding-right: 32px;
+}

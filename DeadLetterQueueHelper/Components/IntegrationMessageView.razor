@@ -45,7 +45,7 @@
             </td>
             <td>@attempt.DeadLetterReason</td>
             <td>@attempt.SequenceNumber</td>
-            <td>@attempt.EnqueuedTime</td>
+            <td>@attempt.EnqueuedTime.ToLocalTime().ToString("g")</td>
         </tr>
     }
 }

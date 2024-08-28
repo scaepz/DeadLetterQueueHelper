@@ -28,6 +28,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
                 {
                     return new IntegrationMessage(groupedDeadLetters.ToList());
                 })
+                .OrderBy(x => x.Attempts.First().EnqueuedTime)
                 .ToList();
         }
 

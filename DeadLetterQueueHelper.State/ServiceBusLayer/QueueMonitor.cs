@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using DeadLetterQueueHelper.State.Models;
 using System.Linq;
 
 namespace DeadLetterQueueHelper.State.ServiceBusLayer
@@ -34,29 +35,33 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             if (_messagesToMonitor.Count == 0)
                 return;
 
-            // TODO what if the user switches queue?
-            // Can we support multiple active queues?
-            var client = await _clientProvider.GetReceiver(SubQueue.None);
-
-            if (client == null)
-                return;
-
-            var queuedMessages = await client.PeekMessagesAsync(1000, 0);
-
-            var localCopyOfMessages = _messagesToMonitor.ToList();
-            for (int i = localCopyOfMessages.Count - 1; i >= 0; i--)
+            foreach (var messagesByQueue in _messagesToMonitor.GroupBy(x => x.Queue))
             {
-                var message = localCopyOfMessages[i];
-                Console.WriteLine(message);
+                var queue = messagesByQueue.Key;
 
-                if (queuedMessages.Any(x => x.MessageId == message.MessageId))
-                    continue;
+                var receiver = await _clientProvider.GetReceiver(queue, SubQueue.None);
 
-                await message.Callback(message);
-                _messagesToMonitor.Remove(message);
+                if (receiver == null)
+                    return;
+
+                var queuedMessages = await receiver.PeekMessagesAsync(1000, 0);
+
+                var localCopyOfMessages = messagesByQueue.ToList();
+                for (int i = localCopyOfMessages.Count - 1; i >= 0; i--)
+                {
+                    var message = localCopyOfMessages[i];
+                    Console.WriteLine(message);
+
+                    if (queuedMessages.Any(x => x.MessageId == message.MessageId))
+                        continue;
+
+                    await message.Callback(message);
+                    _messagesToMonitor.Remove(message);
+                }
             }
+
         }
     }
 
-    public record MonitorEntry(string MessageId, long PreviousSequenceNumber, Func<MonitorEntry, Task> Callback);
+    public record MonitorEntry(Queue Queue, string MessageId, long PreviousSequenceNumber, Func<MonitorEntry, Task> Callback);
 }

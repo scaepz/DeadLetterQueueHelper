@@ -1,5 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 using DeadLetterQueueHelper.State.AppStateLayer;
+using DeadLetterQueueHelper.State.Models;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
@@ -10,21 +11,19 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         public bool IsDisposed => false;
 
         private readonly ServiceBusClientProvider _clientProvider;
-        private readonly SelectedQueueState _selectedQueueState;
         private readonly QueueMonitor _queueMonitor;
 
-        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, SelectedQueueState selectedQueueState, QueueMonitor queueMonitor)
+        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, QueueMonitor queueMonitor)
         {
             _clientProvider = clientProvider;
-            _selectedQueueState = selectedQueueState;
             _queueMonitor = queueMonitor;
         }
 
         [ComputeMethod(AutoInvalidationDelay = 30)]
-        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters()
+        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters(Queue queue)
         {
             Console.WriteLine("PeekAllDeadLetters");
-            var receiver = await _clientProvider.GetReceiver(SubQueue.DeadLetter);
+            var receiver = await _clientProvider.GetReceiver(queue, SubQueue.DeadLetter);
 
             if (receiver == null)
             {
@@ -35,18 +34,18 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             return await receiver.PeekMessagesAsync(1000, fromSequenceNumber: 0);
         }
 
-        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> ForcePeekAllDeadLetters()
+        public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> ForcePeekAllDeadLetters(Queue queue)
         {
             using (Computed.Invalidate())
             {
-                _ = PeekAllDeadLetters();
+                _ = PeekAllDeadLetters(queue);
             }
-            return await PeekAllDeadLetters();
+            return await PeekAllDeadLetters(queue);
         }
 
-        public async Task DeleteDeadLetters(string messageId)
+        public async Task DeleteDeadLetters(Queue queue, string messageId)
         {
-            var deadLetterQueue = await _clientProvider.GetReceiver(SubQueue.DeadLetter);
+            var deadLetterQueue = await _clientProvider.GetReceiver(queue, SubQueue.DeadLetter);
             if (deadLetterQueue == null)
             {
                 throw new InvalidOperationException($"Couldn't get a DLQ receiver when I tried to delete {messageId}.");
@@ -70,14 +69,14 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
             using (Computed.Invalidate())
             {
-                _ = PeekAllDeadLetters();
+                _ = PeekAllDeadLetters(queue);
             }
         }
 
 
-        public async Task Send(ServiceBusReceivedMessage originalMessage)
+        public async Task Send(Queue queue, ServiceBusReceivedMessage originalMessage)
         {
-            var sender = await _clientProvider.GetSender();
+            var sender = await _clientProvider.GetSender(queue);
             if (sender == null)
             {
                 throw new InvalidOperationException("Could not get a service bus sender");

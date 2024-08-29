@@ -1,8 +1,9 @@
 ﻿using Azure.Messaging.ServiceBus;
+using DeadLetterQueueHelper.State.Models;
 
 namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 {
-    public record IntegrationMessage(List<ServiceBusReceivedMessage> Attempts)
+    public record IntegrationMessage(Queue Queue, List<ServiceBusReceivedMessage> Attempts)
     {
         public string Id => Attempts.First().MessageId;
         public string Subject => Attempts.First().Subject;

@@ -14,8 +14,7 @@ namespace DeadLetterQueueHelper.State
         public static IServiceCollection RegisterStateServices(this IServiceCollection services)
         {
             var fusion = services.AddFusion();
-            fusion.AddService<SelectedNameSpaceState>(ServiceLifetime.Scoped);
-            fusion.AddService<SelectedQueueState>(ServiceLifetime.Scoped);
+            fusion.AddService<SelectedQueuesService>(ServiceLifetime.Scoped);
             fusion.AddService<ServiceBusClientProvider>(ServiceLifetime.Scoped);
             fusion.AddService<DeadLetterQueueService>(ServiceLifetime.Scoped);
             fusion.AddService<IntegrationMessageService>(ServiceLifetime.Scoped);

@@ -1,5 +1,8 @@
-﻿using Blazored.LocalStorage;
+﻿using Azure.Messaging.ServiceBus;
+using Blazored.LocalStorage;
+using DeadLetterQueueHelper.State.AppStateLayer;
 using DeadLetterQueueHelper.State.ServiceBusLayer;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
@@ -10,12 +13,18 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
         private readonly DeadLetterQueueService _deadLetterQueueService;
         private readonly ILocalStorageService _localStorage;
         private readonly QueueMonitor _queueMonitor;
+        private readonly SelectedQueuesService _selectedQueuesService;
 
-        public IntegrationMessageService(DeadLetterQueueService deadLetterQueueService, ILocalStorageService localStorage, QueueMonitor queueMonitor)
+        public IntegrationMessageService(
+            DeadLetterQueueService deadLetterQueueService,
+            ILocalStorageService localStorage,
+            QueueMonitor queueMonitor,
+            SelectedQueuesService selectedQueuesService)
         {
             _deadLetterQueueService = deadLetterQueueService;
             _localStorage = localStorage;
             _queueMonitor = queueMonitor;
+            _selectedQueuesService = selectedQueuesService;
         }
 
         public bool IsDisposed => false;
@@ -24,15 +33,27 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
         [ComputeMethod]
         public async virtual Task<IReadOnlyList<IntegrationMessage>> GetFailedMessages()
         {
-            var deadLetters = await _deadLetterQueueService.PeekAllDeadLetters();
+            var queues = await _selectedQueuesService.GetSelectedQueues();
 
-            return deadLetters
-                .GroupBy(x => x.MessageId)
-                .Select(groupedDeadLetters =>
-                {
-                    return new IntegrationMessage(groupedDeadLetters.ToList());
-                })
-                .OrderBy(x => x.Attempts.First().EnqueuedTime)
+            var integrationMessages = new List<IntegrationMessage>();
+
+            foreach (var queue in queues)
+            {
+                var deadLetters = await _deadLetterQueueService.PeekAllDeadLetters(queue);
+
+                var messagesFromThisQueue = deadLetters
+                    .GroupBy(x => x.MessageId)
+                    .Select(groupedDeadLetters =>
+                    {
+                        return new IntegrationMessage(queue, groupedDeadLetters.ToList());
+                    });
+
+                integrationMessages.AddRange(messagesFromThisQueue);
+            }
+
+
+            return integrationMessages
+                .OrderBy(x => x.FirstEnqueuedTime)
                 .ToList();
         }
 
@@ -54,10 +75,11 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
             long lastSequenceNumber = await GetLastSequenceNumber(message);
 
-            await _deadLetterQueueService.Send(message.Attempts.First());
+            await _deadLetterQueueService.Send(message.Queue, message.Attempts.First());
 
             _queueMonitor.CallbackWhenMessageDisappeared(new MonitorEntry
             (
+                message.Queue,
                 message.Id,
                 lastSequenceNumber,
                 HandleResubmissionDisappearedFromQueue)
@@ -66,7 +88,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
         private async Task<long> GetLastSequenceNumber(IntegrationMessage message)
         {
-            var deadLetters = await _deadLetterQueueService.ForcePeekAllDeadLetters();
+            var deadLetters = await _deadLetterQueueService.ForcePeekAllDeadLetters(message.Queue);
             var lastSequenceNumber = deadLetters
                 .Where(x => x.MessageId == message.Id)
                 .Select(x => x.SequenceNumber)
@@ -76,15 +98,15 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
         private async Task HandleResubmissionDisappearedFromQueue(MonitorEntry disappearedMessage)
         {
-            var deadLetters = await _deadLetterQueueService.ForcePeekAllDeadLetters();
+            var deadLetters = await _deadLetterQueueService.ForcePeekAllDeadLetters(disappearedMessage.Queue);
             var newlyDeadLettered = deadLetters.FirstOrDefault(x => x.SequenceNumber > disappearedMessage.PreviousSequenceNumber && x.MessageId == disappearedMessage.MessageId);
 
             await RemovePendingResubmission(disappearedMessage.MessageId);
 
-            if (newlyDeadLettered != null) 
+            if (newlyDeadLettered != null)
                 return;
 
-            await _deadLetterQueueService.DeleteDeadLetters(disappearedMessage.MessageId);
+            await _deadLetterQueueService.DeleteDeadLetters(disappearedMessage.Queue, disappearedMessage.MessageId);
         }
 
         private async Task AddPendingResubmission(string messageId)

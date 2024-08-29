@@ -32,8 +32,25 @@ else
     [Inject]
     public IntegrationMessageService IntegrationMessageService { get; set; } = null!;
 
+    bool _hasRendered = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        _hasRendered = true;
+        if (firstRender)
+            State.Recompute();
+    }
+
     protected override async Task<IReadOnlyList<IntegrationMessage>> ComputeState(CancellationToken cancellationToken)
     {
-        return await IntegrationMessageService.GetFailedMessages();
+        if (!_hasRendered)
+        {
+            // no clue why I need to delay the first call to the fusion service
+            // but if I don't do it I get a null ref exception
+            return [];
+        }
+
+        var result = await IntegrationMessageService.GetFailedMessages();
+        return result;
     }
 }

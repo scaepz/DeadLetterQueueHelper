@@ -6,7 +6,6 @@ using DeadLetterQueueHelper.State;
 using Stl.Fusion.Blazor;
 using Stl.Fusion.Extensions;
 using Stl.Fusion.UI;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

@@ -1,0 +1,36 @@
+﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
+
+<ul>
+    @foreach (var queue in Queues)
+    {
+        <li>@queue.Namespace - @queue.QueueName</li>
+    }
+</ul>
+
+<label for="nameSpaceInput">Service Bus Namespace</label>
+<input name="nameSpaceInput" @bind=InputNamespace />
+
+<label for="queueInput">Queue name</label>
+<input name="queueInput" @bind=InputQueueName/>
+
+<button @onclick=AddQueue>Add</button>
+
+@code {
+    [Inject]
+    public SelectedQueuesService SelectedQueuesService { get; set; } = null!;
+
+    private string InputQueueName { get; set; } = "";
+    private string InputNamespace { get; set; } = "";
+
+    private List<DeadLetterQueueHelper.State.Models.Queue> Queues => State.Value ?? [];
+
+    protected override async Task<List<DeadLetterQueueHelper.State.Models.Queue>> ComputeState(CancellationToken cancellationToken)
+    {
+        return await SelectedQueuesService.GetSelectedQueues();
+    }
+
+    private async Task AddQueue()
+    {
+        await SelectedQueuesService.Add(new(InputNamespace, InputQueueName));
+    }
+}

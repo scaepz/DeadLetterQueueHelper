@@ -20,11 +20,27 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
         public async Task Add(Queue queue)
         {
             var queues = await GetSelectedQueues();
-            if (queues.Contains(queue))
-                return;
+            if (!queues.Contains(queue))
+            {
+                queues.Add(queue);
+                await _storage.SetItemAsync(_storageName, queues);
+            }
 
-            queues.Add(queue);
-            await _storage.SetItemAsync(_storageName, queues);
+            using (Computed.Invalidate())
+            {
+                _ = GetSelectedQueues();
+            }
+        }
+
+        public async Task Remove(Queue queue)
+        {
+            var queues = await GetSelectedQueues();
+
+            if (queues.Contains(queue))
+            {
+                queues.Remove(queue);
+                await _storage.SetItemAsync(_storageName, queues);
+            }
 
             using (Computed.Invalidate())
             {
@@ -39,7 +55,5 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
 
             return result;
         }
-
-
     }
 }

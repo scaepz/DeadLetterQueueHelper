@@ -1,0 +1,17 @@
+﻿<li>
+    <span>@Queue.Namespace - @Queue.QueueName</span>
+    <button @onclick=RemoveQueue>Remove</button>
+</li>
+
+@code {
+    [Parameter]
+    public Queue Queue { get; set; } = null!;
+
+    [Inject]
+    public SelectedQueuesService Service { get; set; } = null!;
+
+    private async Task RemoveQueue()
+    {
+        await Service.Remove(Queue);
+    }
+}

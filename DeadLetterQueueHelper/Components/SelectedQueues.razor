@@ -1,19 +1,20 @@
 ﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
 
+<h2>Selected queues</h2>
+<form @onsubmit=AddQueue>
+    <label for="nameSpaceInput">Service Bus Namespace</label>
+    <input name="nameSpaceInput" @bind=InputNamespace />
+    <label for="queueInput">Queue name</label>
+    <input name="queueInput" @bind=InputQueueName />
+    <button type="submit">Add queue</button>
+</form>
+
 <ul>
     @foreach (var queue in Queues)
     {
-        <li>@queue.Namespace - @queue.QueueName</li>
+        <QueueListItem Queue=queue />
     }
 </ul>
-
-<label for="nameSpaceInput">Service Bus Namespace</label>
-<input name="nameSpaceInput" @bind=InputNamespace />
-
-<label for="queueInput">Queue name</label>
-<input name="queueInput" @bind=InputQueueName/>
-
-<button @onclick=AddQueue>Add</button>
 
 @code {
     [Inject]
@@ -32,5 +33,12 @@
     private async Task AddQueue()
     {
         await SelectedQueuesService.Add(new(InputNamespace, InputQueueName));
+    }
+
+
+    private async Task RemoveQueue(Queue queue)
+    {
+        Console.WriteLine("Remove", queue);
+        await SelectedQueuesService.Remove(new(InputNamespace, InputQueueName));
     }
 }

@@ -1,0 +1,7 @@
+﻿form {
+    width: 900px;
+    padding: 16px 0;
+    display: grid;
+    grid-template-columns: 180px auto;
+    gap: 16px;
+}

@@ -2,6 +2,7 @@
 @using System.Text
 @using System.Security.Cryptography
 
+
 <tr class="message">
     <td class="expansion-cell">
         <button @onclick=ToggleExpand>Expand</button>
@@ -60,12 +61,6 @@
 
     [Inject]
     IntegrationMessageService Service { get; set; } = null!;
-
-    private bool HasEarlierAttempt => _attemptIndex > 0;
-
-    private bool HasLaterAttempt => _attemptIndex < Message.Attempts.Count - 1;
-
-    private ServiceBusReceivedMessage? SelectedAttempt => Message.Attempts.ElementAtOrDefault(_attemptIndex);
 
     void ToggleExpand()
     {

@@ -74,7 +74,7 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         }
 
 
-        public async Task Send(Queue queue, ServiceBusReceivedMessage originalMessage)
+        public async Task Send(Queue queue, ServiceBusReceivedMessage originalMessage, EditableAttemptProperties? withValues = null)
         {
             var sender = await _clientProvider.GetSender(queue);
             if (sender == null)
@@ -83,7 +83,10 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             }
 
             var messageToSend = new ServiceBusMessage(originalMessage);
-
+            if (withValues != null)
+            {
+                messageToSend.Body = new BinaryData(withValues.Body);
+            }
             await sender.SendMessageAsync(messageToSend);
         }
     }

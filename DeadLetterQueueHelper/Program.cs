@@ -6,6 +6,7 @@ using DeadLetterQueueHelper.State;
 using Stl.Fusion.Blazor;
 using Stl.Fusion.Extensions;
 using Stl.Fusion.UI;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -19,9 +20,9 @@ fusion.AddFusionTime();
 
 builder.Services.AddScoped<IUpdateDelayer>(c => new UpdateDelayer(c.UIActionTracker(), 0.2));
 
-builder.Services
-    .AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) })
-    .RegisterStateServices();
+builder.Services.RegisterStateServices();
+
+builder.Services.AddMudServices();
 
 builder.Services.AddMsalAuthentication(options =>
 {

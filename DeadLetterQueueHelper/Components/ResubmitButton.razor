@@ -1,4 +1,5 @@
-﻿@inherits ComputedStateComponent<bool>
+﻿@using MudBlazor
+@inherits ComputedStateComponent<bool>
 
 @if (!State.HasValue)
 {
@@ -6,11 +7,12 @@
 }
 else if (HasPendingResubmission)
 {
-    <div>Pending...</div>
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
 }
 else
 {
-    <button @onclick=Resubmit>Resubmit</button>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => Resubmit()">Resubmit</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick=Edit>Edit & resubmit</MudButton>
 }
 
 @code {
@@ -20,15 +22,33 @@ else
     [Inject]
     public IntegrationMessageService Service { get; set; } = null!;
 
+    [Inject]
+    public IDialogService DialogService { get; set; } = null!;
+
     private bool HasPendingResubmission => State.Value;
+    private IDialogReference? Dialog = null;
 
     protected override async Task<bool> ComputeState(CancellationToken cancellationToken)
     {
         return await Service.HasPendingResubmission(Message.Id);
     }
 
-    private async Task Resubmit()
+    private async Task Resubmit(EditableAttemptProperties? withValues = null)
     {
-        await Service.Resubmit(Message);
+        await Service.Resubmit(Message, withValues);
+        if (Dialog is not null) 
+            DialogService.Close(Dialog);
+    }
+
+    private void Edit()
+    {
+        var attempt = Message.Attempts.First();
+        var editableProps = new EditableAttemptProperties(attempt);
+
+        Dialog = DialogService.Show<EditAndResubmitForm>("Edit and resubmit", new DialogParameters<EditAndResubmitForm>
+        {
+            { x => x.Original, editableProps },
+            { x => x.OnSubmit, EventCallback.Factory.Create<EditableAttemptProperties>(this, Resubmit) },
+        });
     }
 }

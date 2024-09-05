@@ -1,0 +1,32 @@
+﻿@using Azure.Messaging.ServiceBus
+
+<MudContainer>
+    <MudForm @onsubmit=Resubmit>
+        <MudInputLabel for="messageBody">Body: </MudInputLabel>
+        <MudTextField name="messageBody" @bind-Value="Body" Variant="Variant.Outlined" Lines="16" />
+        <MudButton type="submit" Variant="Variant.Filled" Color="Color.Primary">Resubmit</MudButton>
+    </MudForm>
+</MudContainer>
+@code {
+    [Parameter]
+    public EditableAttemptProperties Original { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<EditableAttemptProperties> OnSubmit { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Body = Original.Body.ToString();
+    }
+
+    public string Body { get; set; } = "";
+
+    private async Task Resubmit()
+    {
+        var newMessage = new EditableAttemptProperties(Body);
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(newMessage);
+        }
+    }
+}

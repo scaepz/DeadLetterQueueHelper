@@ -1,13 +1,13 @@
 ﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
 
 <h3>Add a queue to poll for failed messages</h3>
-<form @onsubmit=AddQueue>
-    <label for="nameSpaceInput">Service Bus Namespace</label>
-    <input name="nameSpaceInput" @bind=InputNamespace />
-    <label for="queueInput">Queue name</label>
-    <input name="queueInput" @bind=InputQueueName />
-    <button type="submit">Add queue</button>
-</form>
+<MudForm @onsubmit=AddQueue>
+    <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
+    <MudTextField Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
+    <MudInputLabel for="queueInput">Queue name</MudInputLabel>
+    <MudTextField Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
+</MudForm>
 
 <h3>Queues being polled</h3>
 <ul>

@@ -65,7 +65,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
             return pendingResubmissions.Contains(messageId);
         }
 
-        public async virtual Task Resubmit(IntegrationMessage message)
+        public async virtual Task Resubmit(IntegrationMessage message, EditableAttemptProperties? withValues = null)
         {
             if (await HasPendingResubmission(message.Id))
             {
@@ -75,7 +75,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
             long lastSequenceNumber = await GetLastSequenceNumber(message);
 
-            await _deadLetterQueueService.Send(message.Queue, message.Attempts.First());
+            await _deadLetterQueueService.Send(message.Queue, message.Attempts.First(), withValues);
 
             _queueMonitor.CallbackWhenMessageDisappeared(new MonitorEntry
             (

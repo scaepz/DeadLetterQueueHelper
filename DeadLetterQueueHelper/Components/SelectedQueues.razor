@@ -1,6 +1,6 @@
 ﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
 
-<h2>Selected queues</h2>
+<h3>Add a queue to poll for failed messages</h3>
 <form @onsubmit=AddQueue>
     <label for="nameSpaceInput">Service Bus Namespace</label>
     <input name="nameSpaceInput" @bind=InputNamespace />
@@ -9,6 +9,7 @@
     <button type="submit">Add queue</button>
 </form>
 
+<h3>Queues being polled</h3>
 <ul>
     @foreach (var queue in Queues)
     {

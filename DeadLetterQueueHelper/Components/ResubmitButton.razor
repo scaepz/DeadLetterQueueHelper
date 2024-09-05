@@ -26,15 +26,18 @@ else
     public IDialogService DialogService { get; set; } = null!;
 
     private bool HasPendingResubmission => State.Value;
+    private IDialogReference? Dialog = null;
 
     protected override async Task<bool> ComputeState(CancellationToken cancellationToken)
     {
         return await Service.HasPendingResubmission(Message.Id);
     }
 
-    private async Task Resubmit()
+    private async Task Resubmit(EditableAttemptProperties? withValues = null)
     {
-        await Service.Resubmit(Message);
+        await Service.Resubmit(Message, withValues);
+        if (Dialog is not null) 
+            DialogService.Close(Dialog);
     }
 
     private void Edit()
@@ -42,10 +45,10 @@ else
         var attempt = Message.Attempts.First();
         var editableProps = new EditableAttemptProperties(attempt);
 
-        DialogService.Show<EditAndResubmitForm>("Edit and resubmit", new DialogParameters<EditAndResubmitForm>
+        Dialog = DialogService.Show<EditAndResubmitForm>("Edit and resubmit", new DialogParameters<EditAndResubmitForm>
         {
             { x => x.Original, editableProps },
-            { x => x.Message, Message },
+            { x => x.OnSubmit, EventCallback.Factory.Create<EditableAttemptProperties>(this, Resubmit) },
         });
     }
 }

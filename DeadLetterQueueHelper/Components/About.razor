@@ -1,0 +1,32 @@
+﻿<div style="display: flex; flex-direction:column; gap: 16px; padding: 16px 0">
+    <MudText Typo="Typo.h3">About this tool</MudText>
+    <MudText>
+        Dead Letter Queue Helper is a lightweight tool to help handle dead letters in an Azure Service Bus Queue.
+        DLQ's are primitive by design. They do not have the concept of resubmitting a failed message. Azure Portal's Service Bus Explorer
+        introduces a "Resubmit" function, but using it leaves one wishing for more, because the only thing it does is send a copy of the message to the queue.
+    </MudText>
+    <MudText>
+        This tool implements another layer on top of the DLQ, where dead letters with the same MessageId are assumed to be attempts/retries of the same message.
+        It allows you to submit another attempt, grouping it with earlier attempts under the same message. The tool polls the queue to find out if the new attempt
+        succeeded or failed, and if it succeeded the tool clears the other attempts from the DLQ.
+    </MudText>
+    <MudText>
+        Dead Letter Queue Helper calls the Azure Service Bus directly from your browser, with your own Entra Id credentials. It does not have any API of its own,
+        nor any remote storage. It is totally local to your browser, only speaking to your service bus. It uses LocalStorage to remember what queues you select, and to remember what messages we are polling for success/failure.
+        It uses the DLQ in a non-obtrusive way, adding no metadata to the messages.
+    </MudText>
+    <MudText>
+        As an effect of having no real backend or database, <b>the tool only works as long as you keep it open</b>. 
+    </MudText>
+    <MudText>
+        When you login for the first time, you may be greeted with an <i>"Approval required"</i> screen. You may need your admin's approval to do it.
+    </MudText>
+    <MudText>
+        The app asks for permission to <i>"Have full access to Azure Service Bus service"</i>*. Unfortunately, I haven't been able to find any fine-grained permission for the Service Sus.
+        This tool only requires your account to have <i>"Azure Service Bus Receiver"</i> and <i>"Azure Service Bus Sender""</i> roles on the queues you add to work fully.
+    </MudText>
+    <MudText>
+        This website is served by an Azure Static Web App and is made with Blazor. The source code is available on <MudLink Href="https://github.com/scaepz/DeadLetterQueueHelper">GitHub.</MudLink>
+    </MudText>
+    <MudText Typo="Typo.body2" Color="Color.Tertiary">* Furthermore, the description for that permission is <i>"Allow the application full access to the Azure Key Vault service on behalf of the signed-in user"</i>, which I suspect is a mistake on Microsoft's side.</MudText>
+</div>

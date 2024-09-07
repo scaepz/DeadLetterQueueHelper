@@ -1,14 +1,16 @@
 ﻿@page "/"
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <AuthorizeView>
-        <Authorized>
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
             <SelectedQueues />
             <IntegrationMessageListView />
-        </Authorized>
-        <NotAuthorized>
-            <MudText>You need to login to an account that can access the service buses you want to access</MudText>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <About/>
             <MudLink href="authentication/login">Log in</MudLink>
-        </NotAuthorized>
-    </AuthorizeView>
-</MudContainer>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>

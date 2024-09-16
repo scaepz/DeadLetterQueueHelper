@@ -1,32 +1,88 @@
 ﻿@inherits ComputedStateComponent<IReadOnlyList<IntegrationMessage>>;
 
-<MudText Typo="Typo.h4" Class="pa-4">Failed messages in those queues</MudText>
+<MudText Typo="Typo.h4" Class="pb-2 mt-12">Failed messages in those queues</MudText>
 
 @if (State.HasValue)
 {
-    <table>
-        <thead>
-            <tr>
-                <th>Expand</th>
-                <th>Subject</th>
-                <th>Id</th>
-                <th>First enqueued</th>
-                <th>Dead letter reason</th>
-                <th>Attempts</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var message in State.Value)
+    <MudTable Items="State.Value">
+        <HeaderContent>
+            <MudTh>Expand</MudTh>
+            <MudTh>Subject</MudTh>
+            <MudTh>Id</MudTh>
+            <MudTh>First enqueued</MudTh>
+            <MudTh>Dead letter reason</MudTh>
+            <MudTh>Attempts</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudButton OnClick="@(() => ToggleExpand(context.Id))">Expand</MudButton>
+            </MudTd>
+            <MudTd>
+                @context.Subject
+            </MudTd>
+            <MudTd>
+                @context.Id
+            </MudTd>
+            <MudTd>
+                @context.FirstEnqueuedTime
+            </MudTd>
+            <MudTd>
+                @context.DeadLetterReason
+            </MudTd>
+            <MudTd>
+                @context.Attempts.Count attempts
+            </MudTd>
+            <MudTd>
+                <ResubmitButton Message=context></ResubmitButton>
+            </MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (ExpandedIds.Contains(context.Id))
             {
-                <IntegrationMessageView Message="message" />
+                <MudTr>
+                    <MudTh></MudTh>
+                    <MudTh colspan="3">
+                        <MudText Typo="Typo.subtitle2">
+                            Body
+                        </MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">
+                            Dead letter reason
+                        </MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">
+                            Sequence number
+                        </MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">
+                            Enqueued
+                        </MudText>
+                    </MudTh>
+                </MudTr>
+
+                @foreach (var attempt in context.Attempts)
+                {
+                    <MudTr>
+                        <MudTd class="visually-hidden"></MudTd>
+                        <MudTd colspan="3">
+                            <pre>@attempt.Body</pre>
+                        </MudTd>
+                        <MudTd>@attempt.DeadLetterReason</MudTd>
+                        <MudTd>@attempt.SequenceNumber</MudTd>
+                        <MudTd>@attempt.EnqueuedTime.ToLocalTime().ToString("g")</MudTd>
+                    </MudTr>
+                }
             }
-        </tbody>
-    </table>
+        </ChildRowContent>
+    </MudTable>
 }
 else
 {
-    <div>Loading...</div>
+    <MudProgressCircular></MudProgressCircular>
 }
 
 
@@ -35,12 +91,27 @@ else
     public IntegrationMessageService IntegrationMessageService { get; set; } = null!;
 
     bool _hasRendered = false;
+    private List<string> ExpandedIds { get; set; } = new();
 
     protected override void OnAfterRender(bool firstRender)
     {
         _hasRendered = true;
         if (firstRender)
             State.Recompute();
+    }
+
+
+    private void ToggleExpand(string id)
+    {
+        if (ExpandedIds.Contains(id))
+        {
+            ExpandedIds.Remove(id);
+        }
+        else
+        {
+            ExpandedIds.Add(id);
+        }
+        StateHasChanged();
     }
 
     protected override async Task<IReadOnlyList<IntegrationMessage>> ComputeState(CancellationToken cancellationToken)

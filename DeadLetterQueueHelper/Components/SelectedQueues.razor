@@ -1,18 +1,18 @@
 ﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
 
-<MudText Typo="Typo.h4" Class="pa-4">Add a queue to poll for failed messages</MudText>
-<MudStack>
+<MudContainer>
+    <MudText Typo="Typo.h4" Class="pb-2">Add a queue to poll for failed messages</MudText>
     <MudPaper>
         <MudForm @onsubmit=AddQueue Class="pa-4">
             <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
             <MudTextField Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
             <MudInputLabel Class="mt-3" for="queueInput">Queue name</MudInputLabel>
             <MudTextField Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
-            <MudButton Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
+            <MudButton Class="mt-6 align-self-center" Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
         </MudForm>
     </MudPaper>
 
-    <MudText Typo="Typo.h4" Class="pa-4 mt-8">Queues being polled</MudText>
+    <MudText Typo="Typo.h4" Class="mt-12 pb-2">Queues being polled</MudText>
     <MudPaper>
         <MudList T="Queue" ReadOnly="true" Gutters="true">
             @foreach (var queue in Queues)
@@ -21,7 +21,7 @@
             }
         </MudList>
     </MudPaper>
-</MudStack>
+</MudContainer>
 @code {
     [Inject]
     public SelectedQueuesService SelectedQueuesService { get; set; } = null!;
@@ -35,6 +35,7 @@
     {
         return await SelectedQueuesService.GetSelectedQueues();
     }
+
 
     private async Task AddQueue()
     {

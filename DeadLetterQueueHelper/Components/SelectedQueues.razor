@@ -3,7 +3,7 @@
 <MudContainer>
     <MudText Typo="Typo.h4" Class="pb-2">Add a queue to poll for failed messages</MudText>
     <MudPaper>
-        <MudForm @ref=_form @onsubmit=AddQueue Class="pa-4">
+        <MudForm @ref=Form @onsubmit=AddQueue Class="pa-4">
 
             <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
             <MudTextField Required="true" Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />

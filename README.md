@@ -11,8 +11,10 @@ As an effect of having no real backend or database, **the tool only works as lon
 
 When you login for the first time, you may be greeted with an _"Approval required"_ screen. You may need your admin's approval to do it.
 
-The app asks for permission to _"Have full access to Azure Service Bus service"_*. Unfortunately, I haven't been able to find any more fine-grained permissions for the Service Bus. This tool only requires your account to have _"Azure Service Bus Receiver"_ and _"Azure Service Bus Sender"_ roles on the queues you add.
+The app asks for permission to _"Have full access to Azure Service Bus service"_*. Unfortunately, I haven't been able to find any more fine-grained permissions for the Service Bus. This tool only requires your account to have _"Azure Service Bus Receiver"_ and _"Azure Service Bus Sender"_ roles on the queues you add. Furthermore, the description for that permission is _"Allow the application full access to the Azure Key Vault service on behalf of the signed-in user"_, which I suspect is a mistake on Microsoft's side.
 
-This website is served by an Azure Static Web App and is made with Blazor.
 
-\* Furthermore, the description for that permission is _"Allow the application full access to the Azure Key Vault service on behalf of the signed-in user"_, which I suspect is a mistake on Microsoft's side.
+### Usage
+
+You can use the Dead Letter Queue Helper [here](https://dlqhelper.scaepz.net/), or if you prefer, you can host your own or run it locally.
+

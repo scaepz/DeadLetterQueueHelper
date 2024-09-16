@@ -22,7 +22,6 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             var result = await _accessTokenProvider.RequestAccessToken();
             if (result.TryGetToken(out var token))
             {
-                Console.WriteLine(token.Value);
                 return new Azure.Core.AccessToken(token.Value, token.Expires);
             }
             else

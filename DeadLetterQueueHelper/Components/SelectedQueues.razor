@@ -3,12 +3,13 @@
 <MudContainer>
     <MudText Typo="Typo.h4" Class="pb-2">Add a queue to poll for failed messages</MudText>
     <MudPaper>
-        <MudForm @onsubmit=AddQueue Class="pa-4">
+        <MudForm @ref=_form @onsubmit=AddQueue Class="pa-4">
+
             <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
-            <MudTextField Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
+            <MudTextField Required="true" Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
             <MudInputLabel Class="mt-3" for="queueInput">Queue name</MudInputLabel>
-            <MudTextField Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
-            <MudButton Class="mt-6 align-self-center" Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
+            <MudTextField Required="true" Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
+            <MudButton Class="mt-6 align-self-center" Variant="Variant.Filled" Color="Color.Primary" OnClick="AddQueue">Add queue</MudButton>
         </MudForm>
     </MudPaper>
 
@@ -26,6 +27,8 @@
     [Inject]
     public SelectedQueuesService SelectedQueuesService { get; set; } = null!;
 
+    private MudForm Form { get; set; } = null!;
+
     private string InputQueueName { get; set; } = "";
     private string InputNamespace { get; set; } = "";
 
@@ -39,13 +42,19 @@
 
     private async Task AddQueue()
     {
-        await SelectedQueuesService.Add(new(InputNamespace, InputQueueName));
+        await Form.Validate();
+        if (Form.IsValid)
+        {
+            await SelectedQueuesService.Add(new(InputNamespace, InputQueueName));
+
+            InputNamespace = "";
+            InputQueueName = "";
+        }
     }
 
 
     private async Task RemoveQueue(Queue queue)
     {
-        Console.WriteLine("Remove", queue);
         await SelectedQueuesService.Remove(new(InputNamespace, InputQueueName));
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Azure.Messaging.ServiceBus;
-using DeadLetterQueueHelper.State.AppStateLayer;
 using DeadLetterQueueHelper.State.Models;
 using Stl.DependencyInjection;
 using Stl.Fusion;
@@ -12,26 +11,40 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
         private readonly ServiceBusClientProvider _clientProvider;
         private readonly QueueMonitor _queueMonitor;
+        private readonly QueueErrors _queueErrors;
 
-        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, QueueMonitor queueMonitor)
+        public DeadLetterQueueService(ServiceBusClientProvider clientProvider, QueueMonitor queueMonitor, QueueErrors queueErrors)
         {
             _clientProvider = clientProvider;
             _queueMonitor = queueMonitor;
+            _queueErrors = queueErrors;
         }
 
         [ComputeMethod(AutoInvalidationDelay = 30)]
         public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekAllDeadLetters(Queue queue)
         {
-            Console.WriteLine("PeekAllDeadLetters");
-            var receiver = await _clientProvider.GetReceiver(queue, SubQueue.DeadLetter);
-
-            if (receiver == null)
+            try
             {
-                Console.WriteLine("Receiver was null");
-                return new List<ServiceBusReceivedMessage>();
-            }
+                Console.WriteLine("PeekAllDeadLetters");
+                var receiver = await _clientProvider.GetReceiver(queue, SubQueue.DeadLetter);
 
-            return await receiver.PeekMessagesAsync(1000, fromSequenceNumber: 0);
+                if (receiver == null)
+                {
+                    return [];
+                }
+
+                var messages = await receiver.PeekMessagesAsync(1000, fromSequenceNumber: 0);
+
+                _queueErrors.ClearError(queue);
+
+                return messages;
+            }
+            catch (Exception e)
+            {
+                _queueErrors.SetError(queue, e.Message);
+
+                return [];
+            }
         }
 
         public async virtual Task<IReadOnlyList<ServiceBusReceivedMessage>> ForcePeekAllDeadLetters(Queue queue)

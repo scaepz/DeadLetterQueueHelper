@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using DeadLetterQueueHelper.State.Models;
+using DeadLetterQueueHelper.State.ServiceBusLayer;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
@@ -11,6 +12,8 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
 
         private readonly ILocalStorageService _storage;
         private const string _storageName = "queues";
+
+        private readonly Dictionary<Queue, string> _queueErrors = new();
 
         public SelectedQueuesService(ILocalStorageService storage)
         {
@@ -51,9 +54,7 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
         [ComputeMethod]
         public virtual async Task<List<Queue>> GetSelectedQueues()
         {
-            var result = await _storage.GetItemAsync<List<Queue>>(_storageName) ?? [];
-
-            return result;
+            return await _storage.GetItemAsync<List<Queue>>(_storageName) ?? [];
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
 using DeadLetterQueueHelper.State.Models;
-using System.Linq;
 
 namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
@@ -9,10 +8,12 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         private Timer? _timer;
         private readonly List<MonitorEntry> _messagesToMonitor = new();
         private readonly ServiceBusClientProvider _clientProvider;
+        private readonly QueueErrors _queueErrors;
 
-        public QueueMonitor(ServiceBusClientProvider clientProvider)
+        public QueueMonitor(ServiceBusClientProvider clientProvider, QueueErrors queueErrors)
         {
             _clientProvider = clientProvider;
+            _queueErrors = queueErrors;
         }
 
         public void CallbackWhenMessageDisappeared(MonitorEntry message)
@@ -39,27 +40,33 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
             {
                 var queue = messagesByQueue.Key;
 
-                var receiver = await _clientProvider.GetReceiver(queue, SubQueue.None);
-
-                if (receiver == null)
-                    return;
-
-                var queuedMessages = await receiver.PeekMessagesAsync(1000, 0);
-
-                var localCopyOfMessages = messagesByQueue.ToList();
-                for (int i = localCopyOfMessages.Count - 1; i >= 0; i--)
+                try
                 {
-                    var message = localCopyOfMessages[i];
-                    Console.WriteLine(message);
+                    var receiver = await _clientProvider.GetReceiver(queue, SubQueue.None);
 
-                    if (queuedMessages.Any(x => x.MessageId == message.MessageId))
-                        continue;
+                    if (receiver == null)
+                        return;
 
-                    await message.Callback(message);
-                    _messagesToMonitor.Remove(message);
+                    var queuedMessages = await receiver.PeekMessagesAsync(1000, 0);
+
+                    var localCopyOfMessages = messagesByQueue.ToList();
+                    for (int i = localCopyOfMessages.Count - 1; i >= 0; i--)
+                    {
+                        var message = localCopyOfMessages[i];
+                        Console.WriteLine(message);
+
+                        if (queuedMessages.Any(x => x.MessageId == message.MessageId))
+                            continue;
+
+                        await message.Callback(message);
+                        _messagesToMonitor.Remove(message);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _queueErrors.SetError(queue, e.Message);
                 }
             }
-
         }
     }
 

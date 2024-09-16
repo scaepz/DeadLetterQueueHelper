@@ -2,7 +2,6 @@
 using Blazored.LocalStorage;
 using DeadLetterQueueHelper.State.AppStateLayer;
 using DeadLetterQueueHelper.State.ServiceBusLayer;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 

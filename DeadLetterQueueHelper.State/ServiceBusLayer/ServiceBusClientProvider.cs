@@ -10,10 +10,12 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
     {
         public bool IsDisposed => false;
         private readonly AccessTokenCredential _accessTokenCredential;
+        private readonly SelectedQueuesService _selectedQueuesService;
 
-        public ServiceBusClientProvider(AccessTokenCredential accessTokenCredential)
+        public ServiceBusClientProvider(AccessTokenCredential accessTokenCredential, SelectedQueuesService selectedQueuesService)
         {
             _accessTokenCredential = accessTokenCredential;
+            _selectedQueuesService = selectedQueuesService;
         }
 
 
@@ -24,16 +26,19 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         }
 
         [ComputeMethod]
-        public async virtual Task<ServiceBusReceiver> GetReceiver(Queue queue, SubQueue subQueue)
+        public async virtual Task<ServiceBusReceiver?> GetReceiver(Queue queue, SubQueue subQueue)
         {
             var client = await GetServiceBusClient(queue.Namespace);
 
-            return client.CreateReceiver(queue.QueueName, new ServiceBusReceiverOptions
+            var receiver = client.CreateReceiver(queue.QueueName, new ServiceBusReceiverOptions
             {
                 SubQueue = subQueue,
                 ReceiveMode = ServiceBusReceiveMode.PeekLock,
             });
+
+            return receiver;
         }
+
 
         [ComputeMethod]
         public async virtual Task<ServiceBusSender> GetSender(Queue queue)

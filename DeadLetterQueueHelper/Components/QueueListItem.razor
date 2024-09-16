@@ -1,10 +1,16 @@
-﻿
+﻿@inherits ComputedStateComponent<string?>
 
 <MudListItem T="Queue">
     <MudGrid>
         <MudItem xs="8" >
             <MudText>@Queue.QueueName</MudText>
-            <MudText>@Queue.Namespace</MudText>
+            <MudText Typo="Typo.body2">@Queue.Namespace</MudText>
+            @if(State.Value != null)
+            {
+                <MudText Color="Color.Error">
+                    @State.Value
+                </MudText>
+            }
         </MudItem>
         <MudItem xs="4" class="d-flex justify-end">
             <MudButton OnClick="RemoveQueue">Remove</MudButton>
@@ -19,8 +25,15 @@
     [Inject]
     public SelectedQueuesService Service { get; set; } = null!;
 
+    [Inject]
+    public QueueErrors QueueErrors { get; set; } = null!;
+
     private async Task RemoveQueue()
     {
         await Service.Remove(Queue);
+    }
+    protected async override Task<string?> ComputeState(CancellationToken cancellationToken)
+    {
+        return await QueueErrors.GetError(Queue);
     }
 }

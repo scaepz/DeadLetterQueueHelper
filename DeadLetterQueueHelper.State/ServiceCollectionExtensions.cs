@@ -18,10 +18,10 @@ namespace DeadLetterQueueHelper.State
             fusion.AddService<ServiceBusClientProvider>(ServiceLifetime.Scoped);
             fusion.AddService<DeadLetterQueueService>(ServiceLifetime.Scoped);
             fusion.AddService<IntegrationMessageService>(ServiceLifetime.Scoped);
+            fusion.AddService<QueueErrors>(ServiceLifetime.Scoped);
 
             services.AddScoped<AccessTokenCredential>();
 
-            services.AddScoped<QueueErrors>();
             services.AddScoped<QueueMonitor>();
             services.AddSingleton(TimeProvider.System);
 

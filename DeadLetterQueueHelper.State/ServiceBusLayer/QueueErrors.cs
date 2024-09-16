@@ -1,11 +1,14 @@
 ﻿using DeadLetterQueueHelper.State.Models;
+using Stl.DependencyInjection;
 using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
-    public class QueueErrors : IComputeService
+    public class QueueErrors : IComputeService, IHasIsDisposed
     {
         private readonly Dictionary<Queue, string> _queueErrors = new();
+
+        public bool IsDisposed => false;
 
         [ComputeMethod]
         public virtual Task<string?> GetError(Queue queue)

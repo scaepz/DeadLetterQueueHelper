@@ -1,16 +1,19 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider IsDarkMode="true" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <div class="page">
     <MudLayout>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <MudLink href="/about">About</MudLink>
-        </div>
+        <MudPaper Class="pa-6 d-flex align-center justify-space-between">
+            <MudText Typo="Typo.h3">Dead Letter Queue Helper</MudText>
+            <MudStack Row AlignItems="AlignItems.Center">
+                <LoginDisplay />
+                <MudLink href="/about">About</MudLink>
+            </MudStack>
+        </MudPaper>
         <MudMainContent>
             @Body
         </MudMainContent>

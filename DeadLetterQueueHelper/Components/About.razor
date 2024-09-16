@@ -3,7 +3,7 @@
     <MudText>
         Dead Letter Queue Helper is a lightweight tool to help handle dead letters in an Azure Service Bus Queue.
         DLQ's are primitive by design. They do not have the concept of resubmitting a failed message. Azure Portal's Service Bus Explorer
-        introduces a "Resubmit" function, but using it leaves one wishing for more, because the only thing it does is send a copy of the message to the queue.
+        introduces a "Resubmit" function, but using it leaves one wanting more, because the only thing it does is send a copy of the message to the queue.
     </MudText>
     <MudText>
         This tool implements another layer on top of the DLQ, where dead letters with the same MessageId are assumed to be attempts/retries of the same message.
@@ -12,11 +12,11 @@
     </MudText>
     <MudText>
         Dead Letter Queue Helper calls the Azure Service Bus directly from your browser, with your own Entra Id credentials. It does not have any API of its own,
-        nor any remote storage. It is totally local to your browser, only speaking to your service bus. It uses LocalStorage to remember what queues you select, and to remember what messages we are polling for success/failure.
-        It uses the DLQ in a non-obtrusive way, adding no metadata to the messages.
+        nor any remote storage. It is totally local to your browser, speaking only to your service bus. It uses LocalStorage to remember what queues you select, and to remember what messages we are polling for success/failure.
+        It uses the DLQ in a non-intrusive way, adding no metadata to the messages.
     </MudText>
     <MudText>
-        As an effect of having no real backend or database, <b>the tool only works as long as you keep it open</b>. 
+        As an effect of having no real backend or database, <b>the tool only works as long as you keep the page open</b>. 
     </MudText>
     <MudText>
         When you login for the first time, you may be greeted with an <i>"Approval required"</i> screen. You may need your admin's approval to do it.

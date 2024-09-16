@@ -4,7 +4,7 @@
     <MudForm @onsubmit=Resubmit>
         <MudInputLabel for="messageBody">Body: </MudInputLabel>
         <MudTextField name="messageBody" @bind-Value="Body" Variant="Variant.Outlined" Lines="16" />
-        <MudButton type="submit" Variant="Variant.Filled" Color="Color.Primary" @onclick=Resubmit>Resubmit</MudButton>
+        <MudButton Class="mt-4 mb-4" type="submit" Variant="Variant.Filled" Color="Color.Primary" @onclick=Resubmit>Resubmit</MudButton>
     </MudForm>
 </MudContainer>
 @code {

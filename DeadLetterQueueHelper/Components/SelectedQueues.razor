@@ -1,22 +1,27 @@
 ﻿@inherits ComputedStateComponent<List<DeadLetterQueueHelper.State.Models.Queue>>
 
-<h3>Add a queue to poll for failed messages</h3>
-<MudForm @onsubmit=AddQueue>
-    <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
-    <MudTextField Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
-    <MudInputLabel for="queueInput">Queue name</MudInputLabel>
-    <MudTextField Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
-</MudForm>
+<MudText Typo="Typo.h4" Class="pa-4">Add a queue to poll for failed messages</MudText>
+<MudStack>
+    <MudPaper>
+        <MudForm @onsubmit=AddQueue Class="pa-4">
+            <MudInputLabel for="nameSpaceInput">Service Bus Namespace</MudInputLabel>
+            <MudTextField Variant="Variant.Outlined" name="nameSpaceInput" @bind-Value="InputNamespace" />
+            <MudInputLabel Class="mt-3" for="queueInput">Queue name</MudInputLabel>
+            <MudTextField Variant="Variant.Outlined" name="queueInput" @bind-Value=InputQueueName />
+            <MudButton Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" type="submit">Add queue</MudButton>
+        </MudForm>
+    </MudPaper>
 
-<h3>Queues being polled</h3>
-<ul>
-    @foreach (var queue in Queues)
-    {
-        <QueueListItem Queue=queue />
-    }
-</ul>
-
+    <MudText Typo="Typo.h4" Class="pa-4 mt-8">Queues being polled</MudText>
+    <MudPaper>
+        <MudList T="Queue" ReadOnly="true" Gutters="true">
+            @foreach (var queue in Queues)
+            {
+                <QueueListItem Queue=queue />
+            }
+        </MudList>
+    </MudPaper>
+</MudStack>
 @code {
     [Inject]
     public SelectedQueuesService SelectedQueuesService { get; set; } = null!;

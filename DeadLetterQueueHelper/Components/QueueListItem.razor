@@ -1,7 +1,16 @@
-﻿<li>
-    <span>@Queue.Namespace - @Queue.QueueName</span>
-    <button @onclick=RemoveQueue>Remove</button>
-</li>
+﻿
+
+<MudListItem T="Queue">
+    <MudGrid>
+        <MudItem xs="8" >
+            <MudText>@Queue.QueueName</MudText>
+            <MudText>@Queue.Namespace</MudText>
+        </MudItem>
+        <MudItem xs="4" class="d-flex justify-end">
+            <MudButton OnClick="RemoveQueue">Remove</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudListItem>
 
 @code {
     [Parameter]

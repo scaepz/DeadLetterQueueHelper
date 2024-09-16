@@ -12,7 +12,7 @@ else if (HasPendingResubmission)
 else
 {
     <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="() => Resubmit()">Resubmit</MudButton>
-    <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick=Edit>Edit & resubmit</MudButton>
+    <MudButton @onclick=Edit>Edit & resubmit</MudButton>
 }
 
 @code {

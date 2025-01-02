@@ -1,5 +1,4 @@
-﻿using Azure.Messaging.ServiceBus;
-using Blazored.LocalStorage;
+﻿using Blazored.LocalStorage;
 using DeadLetterQueueHelper.State.AppStateLayer;
 using DeadLetterQueueHelper.State.ServiceBusLayer;
 using Stl.DependencyInjection;
@@ -13,6 +12,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
         private readonly ILocalStorageService _localStorage;
         private readonly QueueMonitor _queueMonitor;
         private readonly SelectedQueuesService _selectedQueuesService;
+        private const string PendingResubmissionsStorageName = "pendingResubmissions";
 
         public IntegrationMessageService(
             DeadLetterQueueService deadLetterQueueService,
@@ -24,10 +24,12 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
             _localStorage = localStorage;
             _queueMonitor = queueMonitor;
             _selectedQueuesService = selectedQueuesService;
+
+            _queueMonitor.OnMessageDisappeared += HandleResubmissionDisappearedFromQueue;
+            _queueMonitor.StartMonitoring();
         }
 
         public bool IsDisposed => false;
-
 
         [ComputeMethod]
         public async virtual Task<IReadOnlyList<IntegrationMessage>> GetFailedMessages()
@@ -50,7 +52,6 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
                 integrationMessages.AddRange(messagesFromThisQueue);
             }
 
-
             return integrationMessages
                 .OrderBy(x => x.FirstEnqueuedTime)
                 .ToList();
@@ -59,8 +60,7 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
         [ComputeMethod]
         public async virtual Task<bool> HasPendingResubmission(string messageId)
         {
-            var storageName = GetPendingResubmissionStorageName(messageId);
-            var pendingResubmissions = await _localStorage.GetItemAsync<List<string>>(storageName) ?? [];
+            var pendingResubmissions = await _localStorage.GetItemAsync<List<string>>(PendingResubmissionsStorageName) ?? [];
             return pendingResubmissions.Contains(messageId);
         }
 
@@ -76,12 +76,11 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
             await _deadLetterQueueService.Send(message.Queue, message.Attempts.First(), withValues);
 
-            _queueMonitor.CallbackWhenMessageDisappeared(new MonitorEntry
+            await _queueMonitor.Add(new MonitorEntry
             (
                 message.Queue,
                 message.Id,
-                lastSequenceNumber,
-                HandleResubmissionDisappearedFromQueue)
+                lastSequenceNumber)
             );
         }
 
@@ -95,31 +94,28 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
             return lastSequenceNumber;
         }
 
-        private async Task HandleResubmissionDisappearedFromQueue(MonitorEntry disappearedMessage)
+        private async Task HandleResubmissionDisappearedFromQueue(object sender, MonitorEntry disappearedMessage)
         {
             var deadLetters = await _deadLetterQueueService.ForcePeekAllDeadLetters(disappearedMessage.Queue);
             var newlyDeadLettered = deadLetters.FirstOrDefault(x => x.SequenceNumber > disappearedMessage.PreviousSequenceNumber && x.MessageId == disappearedMessage.MessageId);
 
+            if (newlyDeadLettered == null)
+            {
+                await _deadLetterQueueService.DeleteDeadLetters(disappearedMessage.Queue, disappearedMessage.MessageId);
+            }
             await RemovePendingResubmission(disappearedMessage.MessageId);
-
-            if (newlyDeadLettered != null)
-                return;
-
-            await _deadLetterQueueService.DeleteDeadLetters(disappearedMessage.Queue, disappearedMessage.MessageId);
         }
 
         private async Task AddPendingResubmission(string messageId)
         {
-            var storageName = GetPendingResubmissionStorageName(messageId);
-
-            var resubmissions = await _localStorage.GetItemAsync<List<string>>(storageName) ?? [];
+            var resubmissions = await _localStorage.GetItemAsync<List<string>>(PendingResubmissionsStorageName) ?? [];
 
             if (resubmissions.Contains(messageId))
                 return;
 
             resubmissions.Add(messageId);
 
-            await _localStorage.SetItemAsync(storageName, resubmissions);
+            await _localStorage.SetItemAsync(PendingResubmissionsStorageName, resubmissions);
 
             using (Computed.Invalidate())
             {
@@ -129,26 +125,19 @@ namespace DeadLetterQueueHelper.State.IntegrationMessageLayer
 
         private async Task RemovePendingResubmission(string messageId)
         {
-            var storageName = GetPendingResubmissionStorageName(messageId);
-
-            var resubmissions = await _localStorage.GetItemAsync<List<string>>(storageName) ?? [];
+            var resubmissions = await _localStorage.GetItemAsync<List<string>>(PendingResubmissionsStorageName) ?? [];
 
             if (!resubmissions.Contains(messageId))
                 return;
 
             resubmissions.Remove(messageId);
 
-            await _localStorage.SetItemAsync(storageName, resubmissions);
+            await _localStorage.SetItemAsync(PendingResubmissionsStorageName, resubmissions);
 
             using (Computed.Invalidate())
             {
                 _ = HasPendingResubmission(messageId);
             }
-        }
-
-        private string GetPendingResubmissionStorageName(string messageId)
-        {
-            return $"pendingResubmissions";
         }
     }
 }

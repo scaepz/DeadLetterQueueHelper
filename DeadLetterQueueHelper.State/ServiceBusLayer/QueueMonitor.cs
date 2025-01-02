@@ -1,25 +1,53 @@
 ﻿using Azure.Messaging.ServiceBus;
+using Blazored.LocalStorage;
 using DeadLetterQueueHelper.State.Models;
+using Stl.Fusion;
 
 namespace DeadLetterQueueHelper.State.ServiceBusLayer
 {
     public class QueueMonitor
     {
         private Timer? _timer;
-        private readonly List<MonitorEntry> _messagesToMonitor = new();
+
         private readonly ServiceBusClientProvider _clientProvider;
         private readonly QueueErrors _queueErrors;
+        private readonly ILocalStorageService _localStorage;
 
-        public QueueMonitor(ServiceBusClientProvider clientProvider, QueueErrors queueErrors)
+        private const string LocalStorageName = "queueMonitor";
+
+        public delegate Task MessageEvent(object sender, MonitorEntry entry);
+        public event MessageEvent? OnMessageDisappeared;
+
+        public QueueMonitor(ServiceBusClientProvider clientProvider, QueueErrors queueErrors, ILocalStorageService localStorage)
         {
             _clientProvider = clientProvider;
             _queueErrors = queueErrors;
+            _localStorage = localStorage;
         }
 
-        public void CallbackWhenMessageDisappeared(MonitorEntry message)
+        public async Task Add(MonitorEntry message)
         {
-            _messagesToMonitor.Add(message);
+            var messages = await GetMessagesToMonitor();
+            messages.Add(message);
+            await SetMessagesToMonitor(messages);
+
             StartMonitoring();
+        }
+
+        [ComputeMethod]
+        protected virtual async Task<List<MonitorEntry>> GetMessagesToMonitor()
+        {
+            return await _localStorage.GetItemAsync<List<MonitorEntry>>(LocalStorageName) ?? [];
+        }
+
+        private async Task SetMessagesToMonitor(List<MonitorEntry> messages)
+        {
+            await _localStorage.SetItemAsync(LocalStorageName, messages);
+
+            using (Computed.Invalidate())
+            {
+                _ = GetMessagesToMonitor();
+            }
         }
 
         public void StartMonitoring()
@@ -32,11 +60,10 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
         private async Task Run()
         {
-            Console.WriteLine("Running monitor");
-            if (_messagesToMonitor.Count == 0)
-                return;
+            var messages = await GetMessagesToMonitor();
+            Console.WriteLine(messages.Count);
 
-            foreach (var messagesByQueue in _messagesToMonitor.GroupBy(x => x.Queue))
+            foreach (var messagesByQueue in messages.GroupBy(x => x.Queue))
             {
                 var queue = messagesByQueue.Key;
 
@@ -49,17 +76,17 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
 
                     var queuedMessages = await receiver.PeekMessagesAsync(1000, 0);
 
-                    var localCopyOfMessages = messagesByQueue.ToList();
-                    for (int i = localCopyOfMessages.Count - 1; i >= 0; i--)
+                    for (int i = messages.Count - 1; i >= 0; i--)
                     {
-                        var message = localCopyOfMessages[i];
-                        Console.WriteLine(message);
-
+                        var message = messages[i];
                         if (queuedMessages.Any(x => x.MessageId == message.MessageId))
                             continue;
 
-                        await message.Callback(message);
-                        _messagesToMonitor.Remove(message);
+                        if (OnMessageDisappeared != null)
+                        {
+                            await OnMessageDisappeared.Invoke(this, message);
+                        }
+                        messages.Remove(message);
                     }
                 }
                 catch (Exception e)
@@ -70,5 +97,5 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         }
     }
 
-    public record MonitorEntry(Queue Queue, string MessageId, long PreviousSequenceNumber, Func<MonitorEntry, Task> Callback);
+    public record MonitorEntry(Queue Queue, string MessageId, long PreviousSequenceNumber);
 }

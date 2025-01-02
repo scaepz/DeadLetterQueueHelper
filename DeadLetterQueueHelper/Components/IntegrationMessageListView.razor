@@ -41,15 +41,14 @@
             @if (ExpandedIds.Contains(context.Id))
             {
                 <MudTr>
-                    <MudTh></MudTh>
-                    <MudTh colspan="3">
+                    <MudTh colspan="2">
                         <MudText Typo="Typo.subtitle2">
                             Body
                         </MudText>
                     </MudTh>
-                    <MudTh>
+                    <MudTh colspan="3">
                         <MudText Typo="Typo.subtitle2">
-                            Dead letter reason
+                            Error details
                         </MudText>
                     </MudTh>
                     <MudTh>
@@ -66,14 +65,13 @@
 
                 @foreach (var attempt in context.Attempts)
                 {
-                    <MudTr>
-                        <MudTd class="visually-hidden"></MudTd>
-                        <MudTd colspan="3">
+                    <MudTr Class="child-row">
+                        <MudTd Class="valign-top" colspan="2">
                             <pre>@attempt.Body</pre>
                         </MudTd>
-                        <MudTd>@attempt.DeadLetterReason</MudTd>
-                        <MudTd>@attempt.SequenceNumber</MudTd>
-                        <MudTd>@attempt.EnqueuedTime.ToLocalTime().ToString("g")</MudTd>
+                        <MudTd Class="valign-top" colspan="3">@attempt.DeadLetterSource / @attempt.DeadLetterReason / @attempt.DeadLetterErrorDescription</MudTd>
+                        <MudTd Class="valign-top">@attempt.SequenceNumber</MudTd>
+                        <MudTd Class="valign-top">@attempt.EnqueuedTime.ToLocalTime().ToString("g")</MudTd>
                     </MudTr>
                 }
             }

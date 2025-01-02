@@ -25,7 +25,6 @@ namespace DeadLetterQueueHelper.State.ServiceBusLayer
         {
             try
             {
-                Console.WriteLine("PeekAllDeadLetters");
                 var receiver = await _clientProvider.GetReceiver(queue, SubQueue.DeadLetter);
 
                 if (receiver == null)

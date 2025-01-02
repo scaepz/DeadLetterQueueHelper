@@ -12,8 +12,6 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
         private readonly ILocalStorageService _storage;
         private const string StorageName = "queues";
 
-        private readonly Dictionary<Queue, string> _queueErrors = new();
-
         public SelectedQueuesService(ILocalStorageService storage)
         {
             _storage = storage;

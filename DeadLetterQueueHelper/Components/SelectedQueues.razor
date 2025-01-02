@@ -36,7 +36,7 @@
 
     protected override async Task<List<DeadLetterQueueHelper.State.Models.Queue>> ComputeState(CancellationToken cancellationToken)
     {
-        return await SelectedQueuesService.GetSelectedQueues();
+        return await SelectedQueuesService.GetAllQueues();
     }
 
 
@@ -45,16 +45,11 @@
         await Form.Validate();
         if (Form.IsValid)
         {
-            await SelectedQueuesService.Add(new(InputNamespace, InputQueueName));
+            await SelectedQueuesService.Add(new(InputNamespace, InputQueueName, IsSelected: true));
 
             InputNamespace = "";
             InputQueueName = "";
         }
     }
 
-
-    private async Task RemoveQueue(Queue queue)
-    {
-        await SelectedQueuesService.Remove(new(InputNamespace, InputQueueName));
-    }
 }

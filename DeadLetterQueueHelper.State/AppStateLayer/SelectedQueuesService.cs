@@ -1,6 +1,5 @@
 ﻿using Blazored.LocalStorage;
 using DeadLetterQueueHelper.State.Models;
-using DeadLetterQueueHelper.State.ServiceBusLayer;
 using Stl.DependencyInjection;
 using Stl.Fusion;
 
@@ -11,7 +10,7 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
         public bool IsDisposed => false;
 
         private readonly ILocalStorageService _storage;
-        private const string _storageName = "queues";
+        private const string StorageName = "queues";
 
         private readonly Dictionary<Queue, string> _queueErrors = new();
 
@@ -22,16 +21,38 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
 
         public async Task Add(Queue queue)
         {
-            var queues = await GetSelectedQueues();
+            var queues = await GetAllQueues();
             if (!queues.Contains(queue))
             {
                 queues.Add(queue);
-                await _storage.SetItemAsync(_storageName, queues);
+                await _storage.SetItemAsync(StorageName, queues);
             }
 
             using (Computed.Invalidate())
             {
-                _ = GetSelectedQueues();
+                _ = GetAllQueues();
+            }
+        }
+
+        public async Task ToggleSelection(Queue queue)
+        {
+            var queues = await GetAllQueues();
+
+            var index = queues.FindIndex(x => x.QueueName == queue.QueueName && x.Namespace == queue.Namespace);
+            if (index == -1)
+            {
+                return;
+            }
+
+            queues[index] = queue with
+            {
+                IsSelected = !queue.IsSelected
+            };
+
+            await _storage.SetItemAsync(StorageName, queues);
+            using (Computed.Invalidate())
+            {
+                _ = GetAllQueues();
             }
         }
 
@@ -39,22 +60,29 @@ namespace DeadLetterQueueHelper.State.AppStateLayer
         {
             var queues = await GetSelectedQueues();
 
-            if (queues.Contains(queue))
-            {
-                queues.Remove(queue);
-                await _storage.SetItemAsync(_storageName, queues);
-            }
+            queues.Remove(queue);
+            await _storage.SetItemAsync(StorageName, queues);
 
             using (Computed.Invalidate())
             {
-                _ = GetSelectedQueues();
+                _ = GetAllQueues();
             }
         }
 
         [ComputeMethod]
         public virtual async Task<List<Queue>> GetSelectedQueues()
         {
-            return await _storage.GetItemAsync<List<Queue>>(_storageName) ?? [];
+            var queues = await GetAllQueues();
+
+            return queues
+                .Where(x => x.IsSelected)
+                .ToList();
+        }
+
+        [ComputeMethod]
+        public virtual async Task<List<Queue>> GetAllQueues()
+        {
+            return await _storage.GetItemAsync<List<Queue>>(StorageName) ?? [];
         }
     }
 }
